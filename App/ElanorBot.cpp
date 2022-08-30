@@ -53,6 +53,8 @@ vector<pair<string, unique_ptr<GroupCommand::GroupCommandBase>>> RegisterCommand
 	REGISTER(GroupCommand::pjskCoverGuess)
 	REGISTER(GroupCommand::pjskChart)
 	REGISTER(GroupCommand::pjskMusicInfo)
+	
+	REGISTER(GroupCommand::Sing)
 
 	#undef REGISTER
 

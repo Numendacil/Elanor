@@ -52,23 +52,32 @@ bool Choyen::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, cons
 	}
 	
 	assert(tokens.size() > 2);
-	if (tokens[1].empty())
+	std::string_view upper = tokens[1];
+	std::string_view lower = tokens[2];
+	if (upper.empty())
 	{
 		logging::INFO("参数1为空 <Choyen>" + Utils::GetDescription(gm, false));
 		client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("看不到第一句话捏，是口口剑22嘛"));
 		return false;
 	}
-	if (tokens[2].empty())
+	if (lower.empty())
 	{
 		logging::INFO("参数2为空 <Choyen>" + Utils::GetDescription(gm, false));
 		client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("看不到第二句话捏，是口口剑22嘛"));
 		return false;
 	}
 
+	bool UpperRainbow = (upper[0] == '$');
+	if (UpperRainbow)
+		upper.remove_prefix(1);
+	bool LowerRainbow = (lower[0] == '$');
+	if (LowerRainbow)
+		lower.remove_prefix(1);
+
 	const string url_local = Utils::Configs.Get<string>("/PythonServer"_json_pointer, "localhost:8000");
 	httplib::Client cli(url_local);
 	Utils::SetClientOptions(cli);
-	auto result = cli.Get("/gen/choyen/", {{"upper", tokens[1]}, {"lower", tokens[2]}}, {{"Accept-Encoding", "gzip"}});
+	auto result = cli.Get("/gen/choyen/", {{"upper", string(upper)}, {"lower", string(lower)}, {"rainbow_upper", UpperRainbow ? "true" : "false"}, {"rainbow_lower", LowerRainbow ? "true" : "false"}}, {{"Accept-Encoding", "gzip"}});
 	if (!Utils::CheckHttpResponse(result, "Choyen"))
 	{
 		client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));

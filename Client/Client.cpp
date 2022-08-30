@@ -88,7 +88,7 @@ void Client::MsgQueue()
 std::future<Mirai::MessageId_t> Client::SendGroupMessage(GID_t GroupId, const MessageChain& msg, std::optional<MessageId_t> QuoteId)
 {
 	std::unique_lock<std::mutex> lk(this->q_mtx);
-	auto SendId = this->message.emplace(GroupId, 0_qq, msg, QuoteId, Message::GROUP).SendId.get_future();
+	auto SendId = this->message.emplace(GroupId, 0_qq, msg, QuoteId, Message::GROUP, std::promise<Mirai::MessageId_t>{}, 0).SendId.get_future();
 	this->cv.notify_one();
 	return SendId;
 }
@@ -96,7 +96,7 @@ std::future<Mirai::MessageId_t> Client::SendGroupMessage(GID_t GroupId, const Me
 std::future<Mirai::MessageId_t> Client::SendFriendMessage(QQ_t qq, const MessageChain& msg, std::optional<MessageId_t> QuoteId)
 {
 	std::unique_lock<std::mutex> lk(this->q_mtx);
-	auto SendId = this->message.emplace(0_gid, qq, msg, QuoteId, Message::FRIEND).SendId.get_future();
+	auto SendId = this->message.emplace(0_gid, qq, msg, QuoteId, Message::FRIEND, std::promise<Mirai::MessageId_t>{}, 0).SendId.get_future();
 	this->cv.notify_one();
 	return SendId;
 }
@@ -104,7 +104,7 @@ std::future<Mirai::MessageId_t> Client::SendFriendMessage(QQ_t qq, const Message
 std::future<Mirai::MessageId_t> Client::SendTempMessage(GID_t GroupId, QQ_t qq, const MessageChain& msg, std::optional<MessageId_t> QuoteId)
 {
 	std::unique_lock<std::mutex> lk(this->q_mtx);
-	auto SendId = this->message.emplace(GroupId, qq, msg, QuoteId, Message::TEMP).SendId.get_future();
+	auto SendId = this->message.emplace(GroupId, qq, msg, QuoteId, Message::TEMP, std::promise<Mirai::MessageId_t>{}, 0).SendId.get_future();
 	this->cv.notify_one();
 	return SendId;
 }

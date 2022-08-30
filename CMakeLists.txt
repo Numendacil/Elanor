@@ -10,13 +10,17 @@ find_package(OpenSSL REQUIRED)
 add_executable(${ELANORBOT_TARGET_NAME})
 
 target_include_directories(${ELANORBOT_TARGET_NAME} PRIVATE .)
-target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE Client)
 target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE ZLIB::ZLIB)
 target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE OpenSSL::SSL)
 target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE OpenSSL::Crypto)
 target_compile_features(${ELANORBOT_TARGET_NAME} PRIVATE cxx_std_20)
-set_property(TARGET ${ELANORBOT_TARGET_NAME} PROPERTY CXX_STANDARD 17)
-set_property(TARGET ${ELANORBOT_TARGET_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE pthread)
+# 静态链接 libgcc 和 libstdc++
+target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE -static-libgcc -static-libstdc++)
+
+target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE -static-libasan)
+target_compile_options(${ELANORBOT_TARGET_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+target_link_options(${ELANORBOT_TARGET_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
 
 add_subdirectory(App)
 add_subdirectory(Client)
