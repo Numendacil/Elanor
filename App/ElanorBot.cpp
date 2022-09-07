@@ -6,17 +6,12 @@
 #include <vector>
 #include <string>
 
-#include <libmirai/mirai.hpp>
-
-#include <Command/Command.hpp>
-#include <Trigger/Trigger.hpp>
-#include <Group/GroupList.hpp>
-#include <Client/Client.hpp>
-#include <Utils/Utils.hpp>
-#include <State/AccessCtrlList.hpp>
 #include <ThirdParty/log.h>
+#include <libmirai/mirai.hpp>
+#include <States/States.hpp>
 
 #include "ElanorBot.hpp"
+#include "Utils/Common.hpp"
 
 using std::string;
 using std::vector;
@@ -26,89 +21,16 @@ using std::unique_ptr;
 namespace Bot
 {
 
-vector<pair<string, unique_ptr<GroupCommand::GroupCommandBase>>> RegisterCommands()
-{
-	vector<pair<string, unique_ptr<GroupCommand::GroupCommandBase>>> v;
-	#define REGISTER(_class_) v.push_back(std::move(std::make_pair( string(_class_::_NAME_), std::move(std::make_unique<_class_>()))));
-
-	REGISTER(GroupCommand::WhiteList)
-	REGISTER(GroupCommand::BlackList)
-	REGISTER(GroupCommand::CommandAuth)
-	REGISTER(GroupCommand::SetTrigger)
-
-	REGISTER(GroupCommand::RollDice)
-	REGISTER(GroupCommand::Repeat)
-	REGISTER(GroupCommand::Recall)
-	REGISTER(GroupCommand::AtBot)
-	REGISTER(GroupCommand::Bililive)
-	REGISTER(GroupCommand::Answer)
-
-	REGISTER(GroupCommand::Petpet)
-	REGISTER(GroupCommand::Choyen)
-	REGISTER(GroupCommand::ImageSearch)
-	REGISTER(GroupCommand::Pixiv)
-
-	REGISTER(GroupCommand::pjskUpdate)
-	REGISTER(GroupCommand::pjskSongGuess)
-	REGISTER(GroupCommand::pjskCoverGuess)
-	REGISTER(GroupCommand::pjskChart)
-	REGISTER(GroupCommand::pjskMusicInfo)
-	
-	REGISTER(GroupCommand::Sing)
-
-	#undef REGISTER
-
-	std::sort(v.begin(), 
-		v.end(), 
-		[](const pair<string, unique_ptr<GroupCommand::GroupCommandBase>>& a, const pair<string, unique_ptr<GroupCommand::GroupCommandBase>>& b)
-		{
-			return (a.second)->Priority() > (b.second)->Priority();
-		});
-
-	return v;
-}
-
-vector<pair<string, unique_ptr<Trigger::TriggerBase>>> RegisterTriggers()
-{
-	vector<pair<string, unique_ptr<Trigger::TriggerBase>>> v;
-	#define REGISTER(_class_) v.push_back(std::move(std::make_pair( string(_class_::_NAME_), std::move(std::make_unique<_class_>()))));
-
-	REGISTER(Trigger::BililiveTrigger)
-	REGISTER(Trigger::MorningTrigger)
-
-	#undef REGISTER
-	return v;
-}
-
 ElanorBot::ElanorBot(Mirai::QQ_t owner_id) :
-	is_running(false), suid(owner_id), group_commands(RegisterCommands()), triggers(RegisterTriggers())
+	_running(false), _suid(owner_id)
 {
-	vector<pair<string, int>> command_list;
-	vector<pair<string, bool>> trigger_list;
-	command_list.reserve(this->group_commands.size());
-	trigger_list.reserve(this->triggers.size());
-
-	for (const auto& p : this->group_commands)
-	{
-		command_list.emplace_back(p.first, p.second->Permission());
-	}
-	for (const auto& p : this->triggers)
-	{
-		trigger_list.emplace_back(p.first, p.second->TriggerOnStart());
-	}
-
-	this->groups = make_shared<GroupList>(owner_id, command_list, trigger_list);
-	for (const auto& p : this->triggers)
-	{
-		p.second->SetGroups(this->groups);
-	}
 }
 
 void ElanorBot::NudgeEventHandler(Mirai::NudgeEvent& e)
 {
 	{
-		std::lock_guard<std::mutex> lk(this->mtx);
-		if (!this->is_running)	
+		std::lock_guard<std::mutex> lk(this->_MemberMtx);
+		if (!this->_running)	
 			return;
 	}
 
@@ -127,15 +49,16 @@ void ElanorBot::NudgeEventHandler(Mirai::NudgeEvent& e)
 			string group_name = client.GetGroupConfig(e.GetTarget().GetGroup()).name;
 			logging::INFO("有人戳bot <OnNudgeEvent>\t<- [" + sender + "(" + e.GetSender().to_string() + "), " + group_name + "(" + e.GetTarget().GetGroup().to_string() + ")]");
 			
-			std::unique_lock<std::mutex> lock(this->nudge_mtx, std::try_to_lock);
+			std::unique_lock<std::mutex> lock(this->_NudgeMtx, std::try_to_lock);
 			if (!lock)
 			{
 				logging::INFO("冷却中 <OnNudgeEvent>");
 				return;
 			}
 			
-			std::uniform_int_distribution<int> rng05(0, 5);
-			int i = rng05(Utils::rng_engine);
+			constexpr int SWORE_PROB = 6;
+			std::uniform_int_distribution<int> dist(0, SWORE_PROB - 1);
+			int i = dist(Utils::GetRngEngine());
 			if (i)
 			{
 				std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -159,8 +82,8 @@ void ElanorBot::NudgeEventHandler(Mirai::NudgeEvent& e)
 void ElanorBot::GroupMessageEventHandler(Mirai::GroupMessageEvent& gm)
 {
 	{
-		std::lock_guard<std::mutex> lk(this->mtx);
-		if (!this->is_running)	
+		std::lock_guard<std::mutex> lk(this->_MemberMtx);
+		if (!this->_running)	
 			return;
 	}
 
@@ -168,7 +91,7 @@ void ElanorBot::GroupMessageEventHandler(Mirai::GroupMessageEvent& gm)
 	if (gm.GetSender().id == client.GetBotQQ())
 		return;
 	
-	Group& group = this->groups->GetGroup(gm.GetSender().group.id);
+	Group& group = this->_groups->GetGroup(gm.GetSender().group.id);
 	
 	auto access_list = group.GetState<State::AccessCtrlList>();
 
@@ -176,7 +99,7 @@ void ElanorBot::GroupMessageEventHandler(Mirai::GroupMessageEvent& gm)
 		return;
 
 	int auth = 0;
-	if (gm.GetSender().id == this->suid)
+	if (gm.GetSender().id == this->_suid)
 		auth = 100;
 	else if (access_list->IsWhiteList(gm.GetSender().id))
 		auth = 50;
@@ -196,7 +119,7 @@ void ElanorBot::GroupMessageEventHandler(Mirai::GroupMessageEvent& gm)
 	}
 
 	int priority = -1;
-	for (const auto& p : this->group_commands)
+	for (const auto& p : this->_GroupCommands)
 	{
 		if ((p.second)->Priority() < priority)
 			break;

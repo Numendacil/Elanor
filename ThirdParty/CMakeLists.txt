@@ -1,13 +1,4 @@
-add_library(cppcodec INTERFACE)
-target_include_directories(cppcodec INTERFACE cppcodec/)
-target_link_libraries( ${ELANORBOT_TARGET_NAME} PRIVATE cppcodec)
+add_library(ThirdParty INTERFACE)
+add_library(${ELANORBOT_TARGET_NAME}::ThirdParty ALIAS ThirdParty)
 
-target_sources( ${ELANORBOT_TARGET_NAME} 
-	PRIVATE 
-		croncpp.h
-		date.h
-		log.h
-		uuid.h
-	)
-
-target_link_libraries( ${ELANORBOT_TARGET_NAME} PRIVATE httplib::httplib)
+target_link_libraries(ThirdParty INTERFACE httplib::httplib)
