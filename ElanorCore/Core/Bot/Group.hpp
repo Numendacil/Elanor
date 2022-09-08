@@ -9,9 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include <States/StateBase.hpp>
-#include <Utils/Logger.hpp>
-
+#include <Core/States/StateBase.hpp>
+#include <Core/Utils/Logger.hpp>
 #include <libmirai/Types/BasicTypes.hpp>
 
 namespace Bot

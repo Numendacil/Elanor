@@ -1,12 +1,10 @@
-#include "libmirai/Utils/Logger.hpp"
+#include "Logger.hpp"
 
 #include <chrono>
 #include <ctime>
 #include <iostream>
 #include <memory>
 #include <string_view>
-
-#include "Logger.hpp"
 
 namespace
 {
@@ -55,10 +53,21 @@ void Logger::log(const std::string& msg, Mirai::LoggingLevels level)
 	std::cout.flush();
 }
 
-std::shared_ptr<Mirai::ILogger> GetLogger()
+namespace
 {
-	static std::shared_ptr<Mirai::ILogger> logger = std::make_shared<Logger>();
+
+std::shared_ptr<Logger> logger = std::make_shared<Logger>();
+
+}
+
+std::shared_ptr<Logger> GetLoggerPtr()
+{
 	return logger;
+}
+
+Logger& GetLogger()
+{
+	return *logger;
 }
 
 } // namespace Utils

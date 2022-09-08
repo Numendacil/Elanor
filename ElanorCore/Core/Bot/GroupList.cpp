@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <Utils/Logger.hpp>
+#include <Core/Utils/Logger.hpp>
 
 using std::pair;
 using std::string;
@@ -31,7 +31,7 @@ GroupList::GroupList(Mirai::QQ_t owner_id, std::vector<std::pair<std::string, in
 			}
 			catch (const std::logic_error& e)
 			{
-				LOG_WARN(*Utils::GetLogger(),
+				LOG_WARN(Utils::GetLogger(),
 				         "Unexpected file found in ./bot directory: " + string(entry.path().filename()));
 			}
 		}

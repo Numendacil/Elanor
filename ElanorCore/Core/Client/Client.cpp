@@ -6,8 +6,7 @@
 #include <stdexcept>
 #include <thread>
 
-#include <Utils/Logger.hpp>
-
+#include <Core/Utils/Logger.hpp>
 #include <libmirai/Api/Client.hpp>
 
 using namespace Mirai;
@@ -26,7 +25,7 @@ namespace Bot
 Client::Client() : _connected(false), _interval(std::chrono::milliseconds(INTERVAL))
 {
 	this->_client = std::make_unique<MiraiClient>();
-	this->_client->SetLogger(::Utils::GetLogger());
+	this->_client->SetLogger(::Utils::GetLoggerPtr());
 }
 Client::~Client()
 {
@@ -73,13 +72,13 @@ void Client::MsgQueue()
 				id = this->_client->SendTempMessage(msg.qq, msg.GroupId, msg.msg, msg.QuoteId, true);
 				break;
 			default:
-				LOG_ERROR(*::Utils::GetLogger(), "waht");
+				LOG_ERROR(::Utils::GetLogger(), "waht");
 			}
 			msg.SendId.set_value(id);
 		}
 		catch (std::exception& e)
 		{
-			LOG_WARN(*::Utils::GetLogger(), std::string("MsgQueue: ") + e.what());
+			LOG_WARN(::Utils::GetLogger(), std::string("MsgQueue: ") + e.what());
 			if (msg.count + 1 < MAX_RETRY)
 			{
 				std::unique_lock<std::mutex> lk(this->_mtx);

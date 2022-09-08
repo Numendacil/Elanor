@@ -14,7 +14,8 @@ public:
 	void log(const std::string& msg, Mirai::LoggingLevels level) override;
 };
 
-std::shared_ptr<Mirai::ILogger> GetLogger();
+std::shared_ptr<Logger> GetLoggerPtr();
+Logger& GetLogger();
 
 } // namespace Utils
 

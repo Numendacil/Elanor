@@ -25,6 +25,6 @@ project(ElanorBot LANGUAGES CXX VERSION 1.0.0)
 # target_link_options(${ELANORBOT_TARGET_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
 
 add_subdirectory(App)
-add_subdirectory(Core)
+add_subdirectory(ElanorCore)
 # add_subdirectory(ThirdParty)
 # add_subdirectory(Utils)

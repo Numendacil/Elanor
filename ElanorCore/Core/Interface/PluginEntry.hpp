@@ -1,8 +1,8 @@
 #ifndef _ELANOR_CORE_PLUGIN_ENTRY_HPP_
 #define _ELANOR_CORE_PLUGIN_ENTRY_HPP_
 
-#include "Interface/IGroupCommand.hpp"
-#include "Interface/ITrigger.hpp"
+#include "IGroupCommand.hpp"
+#include "ITrigger.hpp"
 
 #if defined(__linux__) || defined(__APPLE__)
 #define EXPORTED

@@ -6,8 +6,8 @@
 #include <fstream>
 #include <memory>
 
-#include <States/States.hpp>
-#include <Utils/Logger.hpp>
+#include <Core/States/States.hpp>
+#include <Core/Utils/Logger.hpp>
 #include <nlohmann/json.hpp>
 
 
@@ -72,7 +72,7 @@ void Group::ToFile()
 	}
 	catch (const std::exception& e)
 	{
-		LOG_WARN(*Utils::GetLogger(), "Failed to create directory ./bot/: " + std::string(e.what()));
+		LOG_WARN(Utils::GetLogger(), "Failed to create directory ./bot/: " + std::string(e.what()));
 		return;
 	}
 
@@ -82,10 +82,10 @@ void Group::ToFile()
 		std::ofstream file(Path);
 		if (!file)
 		{
-			LOG_WARN(*Utils::GetLogger(), "Failed to open file " + string(Path) + " for writing");
+			LOG_WARN(Utils::GetLogger(), "Failed to open file " + string(Path) + " for writing");
 			return;
 		}
-		LOG_INFO(*Utils::GetLogger(), "Writing to file " + string(Path));
+		LOG_INFO(Utils::GetLogger(), "Writing to file " + string(Path));
 		file << content.dump(1, '\t');
 	}
 }
@@ -102,17 +102,17 @@ void Group::FromFile()
 		std::ifstream file(Path);
 		if (!file)
 		{
-			LOG_WARN(*Utils::GetLogger(), "Failed to open file " + string(Path) + " for reading");
+			LOG_WARN(Utils::GetLogger(), "Failed to open file " + string(Path) + " for reading");
 			return;
 		}
 		content = json::parse(file);
 	}
 	catch (json::parse_error& e)
 	{
-		LOG_WARN(*Utils::GetLogger(), "Failed to parse file " + string(Path) + " :" + e.what());
+		LOG_WARN(Utils::GetLogger(), "Failed to parse file " + string(Path) + " :" + e.what());
 		return;
 	}
-	LOG_INFO(*Utils::GetLogger(), "Reading from file " + string(Path));
+	LOG_INFO(Utils::GetLogger(), "Reading from file " + string(Path));
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx_state);
 		if (content.contains("States"))
