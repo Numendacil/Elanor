@@ -5,7 +5,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include <filesystem>
 #include <utility>
 #include <vector>
 
@@ -36,18 +36,16 @@ protected:
 	};
 
 public:
-	Group(Mirai::GID_t group_id, Mirai::QQ_t owner_id, const std::vector<std::pair<std::string, int>>& command_list,
-	      const std::vector<std::pair<std::string, bool>>& trigger_list);
+	Group(Mirai::GID_t group_id, Mirai::QQ_t owner_id);
 	Group(const Group&) = delete;
 	Group& operator=(const Group&) = delete;
 	Group(Group&&) = delete;
 	Group& operator=(Group&&) = delete;
 
-	void ToFile();
-	void FromFile();
+	void ToFile(const std::filesystem::path& filepath) const;
+	void FromFile(const std::filesystem::path& filepath);
 
 	const Mirai::GID_t gid;
-	const Mirai::QQ_t suid;
 
 	template<class T> T* GetState() const
 	{
@@ -61,7 +59,7 @@ public:
 		return static_cast<T*>(ptr);
 	}
 
-	~Group() { this->ToFile(); }
+	~Group() = default;
 };
 } // namespace Bot
 

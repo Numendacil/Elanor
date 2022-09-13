@@ -41,22 +41,12 @@ std::unordered_map<string, std::unique_ptr<State::StateBase>> RegisterStates()
 } // namespace
 
 
-Group::Group(Mirai::GID_t group_id, Mirai::QQ_t owner_id, const std::vector<std::pair<std::string, int>>& command_list,
-             const std::vector<std::pair<std::string, bool>>& trigger_list)
-	: gid(group_id), suid(owner_id), _states(RegisterStates())
+Group::Group(Mirai::GID_t group_id, Mirai::QQ_t owner_id)
+	: gid(group_id), _states(RegisterStates())
 {
-	auto command = this->GetState<State::CommandPerm>();
-	for (const auto& p : command_list)
-		command->AddCommand(p.first, p.second);
-
-	auto trigger = this->GetState<State::TriggerStatus>();
-	for (const auto& p : trigger_list)
-		trigger->AddTrigger(p.first, p.second);
-
-	this->FromFile();
 }
 
-void Group::ToFile()
+void Group::ToFile(const std::filesystem::path& filepath) const
 {
 	json content{};
 	{
@@ -65,54 +55,50 @@ void Group::ToFile()
 			if (!p.second->Serialize().empty()) content["States"][p.first] = p.second->Serialize();
 	}
 
-	std::filesystem::path Path = "./bot";
 	try
 	{
-		std::filesystem::create_directory(Path);
+		std::filesystem::create_directories(filepath.parent_path());
 	}
 	catch (const std::exception& e)
 	{
-		LOG_WARN(Utils::GetLogger(), "Failed to create directory ./bot/: " + std::string(e.what()));
+		LOG_WARN(Utils::GetLogger(), "Failed to create directory " + string(filepath.parent_path()) + ": " + std::string(e.what()));
 		return;
 	}
 
-	Path /= this->gid.to_string();
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx_file);
-		std::ofstream file(Path);
+		std::ofstream file(filepath);
 		if (!file)
 		{
-			LOG_WARN(Utils::GetLogger(), "Failed to open file " + string(Path) + " for writing");
+			LOG_WARN(Utils::GetLogger(), "Failed to open file " + string(filepath) + " for writing");
 			return;
 		}
-		LOG_INFO(Utils::GetLogger(), "Writing to file " + string(Path));
+		LOG_INFO(Utils::GetLogger(), "Writing to file " + string(filepath));
 		file << content.dump(1, '\t');
 	}
 }
 
-void Group::FromFile()
+void Group::FromFile(const std::filesystem::path& filepath)
 {
 	json content;
-	std::filesystem::path Path = "./bot";
-	Path /= this->gid.to_string();
-	if (!std::filesystem::exists(Path)) return;
+	if (!std::filesystem::exists(filepath)) return;
 	try
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx_file);
-		std::ifstream file(Path);
+		std::ifstream file(filepath);
 		if (!file)
 		{
-			LOG_WARN(Utils::GetLogger(), "Failed to open file " + string(Path) + " for reading");
+			LOG_WARN(Utils::GetLogger(), "Failed to open file " + string(filepath) + " for reading");
 			return;
 		}
 		content = json::parse(file);
 	}
 	catch (json::parse_error& e)
 	{
-		LOG_WARN(Utils::GetLogger(), "Failed to parse file " + string(Path) + " :" + e.what());
+		LOG_WARN(Utils::GetLogger(), "Failed to parse file " + string(filepath) + " :" + e.what());
 		return;
 	}
-	LOG_INFO(Utils::GetLogger(), "Reading from file " + string(Path));
+	LOG_INFO(Utils::GetLogger(), "Reading from file " + string(filepath));
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx_state);
 		if (content.contains("States"))

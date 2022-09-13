@@ -9,6 +9,7 @@
 #include <libmirai/Types/Types.hpp>
 
 #include "StateBase.hpp"
+#include "libmirai/Types/BasicTypes.hpp"
 
 namespace State
 {
@@ -18,8 +19,9 @@ class AccessCtrlList : public StateBase
 protected:
 	mutable std::mutex _mtx;
 
-	std::unordered_set<Mirai::QQ_t> _WhiteList;
-	std::unordered_set<Mirai::QQ_t> _BlackList;
+	std::unordered_set<Mirai::QQ_t> _WhiteList{};
+	std::unordered_set<Mirai::QQ_t> _BlackList{};
+	Mirai::QQ_t _suid{};
 
 public:
 	static constexpr std::string_view _NAME_ = "AccessCtrlList";
@@ -48,7 +50,7 @@ public:
 		this->_WhiteList.clear();
 	}
 
-	std::vector<Mirai::QQ_t> GetWhiteList()
+	std::vector<Mirai::QQ_t> GetWhiteList() const
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx);
 		return {this->_WhiteList.begin(), this->_WhiteList.end()};
@@ -78,10 +80,22 @@ public:
 		this->_BlackList.clear();
 	}
 
-	std::vector<Mirai::QQ_t> GetBlackList()
+	std::vector<Mirai::QQ_t> GetBlackList() const
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx);
 		return {this->_BlackList.begin(), this->_BlackList.end()};
+	}
+
+	Mirai::QQ_t GetSuid() const
+	{
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		return this->_suid;
+	}
+
+	void SetSuid(Mirai::QQ_t id)
+	{
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		this->_suid = id;
 	}
 
 	nlohmann::json Serialize() override;

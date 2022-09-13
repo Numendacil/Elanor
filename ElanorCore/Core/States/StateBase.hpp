@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 namespace State
 {
@@ -11,9 +11,9 @@ namespace State
 class StateBase
 {
 public:
-	// Return empty string if no serialization needed
-	virtual nlohmann::json Serialize() { return {}; }
-	virtual void Deserialize(const nlohmann::json&) {}
+	// Return empty json if no serialization needed
+	virtual nlohmann::json Serialize();
+	virtual void Deserialize(const nlohmann::json&);
 
 	virtual ~StateBase() = default;
 };

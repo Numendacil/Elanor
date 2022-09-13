@@ -3,7 +3,7 @@
 
 #include <mutex>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 #include <utility>
 
 #include "StateBase.hpp"
@@ -16,7 +16,7 @@ class TriggerStatus : public StateBase
 protected:
 	mutable std::mutex _mtx;
 
-	std::unordered_map<std::string, bool> _enabled; // { key : {current, default} }
+	std::unordered_map<std::string, bool> _enabled;
 
 public:
 	static constexpr std::string_view _NAME_ = "TriggerStatus";

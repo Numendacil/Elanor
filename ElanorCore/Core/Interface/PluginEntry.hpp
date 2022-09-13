@@ -22,22 +22,62 @@
 
 extern "C"
 {
-	EXPORTED void InitPlugin();
+	struct API
+	{
+		void (*InitPlugin)();
 
-	EXPORTED const char* GetPluginName();
-	EXPORTED const char* GetPluginInfo();
+		const char* (*GetPluginName)();
+		const char* (*GetPluginInfo)();
 
-	EXPORTED int GetGroupCommandCount();
-	EXPORTED const char* GetGroupCommandName(int idx);
-	EXPORTED GroupCommand::IGroupCommand* GetGroupCommand(int idx);
-	EXPORTED void DeleteGroupCommand(GroupCommand::IGroupCommand* cmd);
+		int (*GetGroupCommandCount)();
+		const char* (*GetGroupCommandName)(int);
+		GroupCommand::IGroupCommand* (*GetGroupCommand)(int);
+		void (*DeleteGroupCommand)(GroupCommand::IGroupCommand*);
 
-	EXPORTED int GetTriggerCount();
-	EXPORTED const char* GetTriggerName(int idx);
-	EXPORTED Trigger::ITrigger* GetTrigger(int idx);
-	EXPORTED void DeleteTrigger(Trigger::ITrigger* trigger);
+		int (*GetTriggerCount)();
+		const char* (*GetTriggerName)(int);
+		Trigger::ITrigger* (*GetTrigger)(int);
+		void (*DeleteTrigger)(Trigger::ITrigger*);
 
-	EXPORTED void ClosePlugin();
+		void (*ClosePlugin)();
+	};
+
+#ifdef PLUGIN_ENTRY_IMPL
+
+	void InitPlugin();
+
+	const char* GetPluginName();
+	const char* GetPluginInfo();
+
+	int GetGroupCommandCount();
+	const char* GetGroupCommandName(int idx);
+	GroupCommand::IGroupCommand* GetGroupCommand(int idx);
+	void DeleteGroupCommand(GroupCommand::IGroupCommand* cmd);
+
+	int GetTriggerCount();
+	const char* GetTriggerName(int idx);
+	Trigger::ITrigger* GetTrigger(int idx);
+	void DeleteTrigger(Trigger::ITrigger* trigger);
+
+	void ClosePlugin();
+
+	extern "C" EXPORTED const API ApiTable{
+		InitPlugin, 
+		GetPluginName,
+		GetPluginInfo,
+		GetGroupCommandCount,
+		GetGroupCommandName,
+		GetGroupCommand,
+		DeleteGroupCommand,
+		GetTriggerCount,
+		GetTriggerName,
+		GetTrigger,
+		DeleteTrigger,
+		ClosePlugin
+	};
+
+#endif
+
 }
 
 #endif

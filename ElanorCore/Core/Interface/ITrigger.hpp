@@ -13,6 +13,13 @@ class Client;
 
 }
 
+namespace Utils
+{
+
+class BotConfig;
+
+}
+
 namespace Trigger
 {
 
@@ -25,7 +32,7 @@ public:
 	ITrigger(ITrigger&&) noexcept = default;
 	ITrigger& operator=(ITrigger&&) noexcept = default;
 
-	virtual void Action(Bot::GroupList* groups, Bot::Client* client) = 0;
+	virtual void Action(Bot::GroupList& groups, Bot::Client& client, Utils::BotConfig& config) = 0;
 	virtual time_t GetNext() = 0;
 
 	virtual ~ITrigger() = default;

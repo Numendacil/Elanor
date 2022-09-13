@@ -3,6 +3,7 @@ target_sources(
 	${ELANORBOT_CORE} PRIVATE 
 		States.hpp
 		StateBase.hpp
+		StateBase.cpp
 		AccessCtrlList.hpp
 		AccessCtrlList.cpp
 		Activity.hpp
