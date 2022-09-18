@@ -28,7 +28,8 @@ bool BotConfig::FromFile(const std::string &filepath)
 	}
 	try
 	{
-		this->config = json::parse(ifile);
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		this->_config = json::parse(ifile);
 	}
 	catch (const std::exception& e)
 	{

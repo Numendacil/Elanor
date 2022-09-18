@@ -24,7 +24,7 @@ project(ElanorBot LANGUAGES CXX VERSION 1.0.0)
 # target_compile_options(${ELANORBOT_TARGET_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
 # target_link_options(${ELANORBOT_TARGET_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
 
-add_subdirectory(App)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install library in the current directory" FORCE)
+
+add_subdirectory(ElanorApp)
 add_subdirectory(ElanorCore)
-# add_subdirectory(ThirdParty)
-# add_subdirectory(Utils)

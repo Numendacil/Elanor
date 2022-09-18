@@ -1,3 +1,7 @@
+cmake_minimum_required (VERSION 3.20)
+
+project(ElanorApp LANGUAGES CXX VERSION 1.0.0)
+
 set(ELANORBOT_APP ElanorApp)
 
 add_executable(${ELANORBOT_APP})
@@ -13,3 +17,11 @@ target_sources(
 
 target_include_directories(${ELANORBOT_APP} PRIVATE .)
 target_link_libraries(${ELANORBOT_APP} PRIVATE ${CMAKE_PROJECT_NAME}::ElanorCore)
+
+add_subdirectory(Utils)
+
+set_target_properties(${ELANORBOT_APP} PROPERTIES INSTALL_RPATH "$\{ORIGIN\};${INSTALL_RPATH}")
+install(
+	TARGETS ${ELANORBOT_APP}
+	DESTINATION "bin"
+)

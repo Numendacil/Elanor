@@ -54,15 +54,15 @@ IncludeCategories:
   # Headers in <> without extension.
   - Regex:           '<([A-Za-z0-9\/-_])+>'
     Priority:        1
-  # Headers in <> with extension.
-  - Regex:           '<([A-Za-z0-9.\Q/-_\E])+>'
-    Priority:        2
   # Headers in <> from libmirai.
   - Regex:           '<(libmirai)\/'
     Priority:        3
   # Headers in <> from Core.
   - Regex:           '<(Core)\/'
     Priority:        4
+  # Headers in <> with extension.
+  - Regex:           '<([A-Za-z0-9.\Q/-_\E])+>'
+    Priority:        2
   # Headers in "" with extension.
   - Regex:           '"([A-Za-z0-9.\Q/-_\E])+"'
     Priority:        5
