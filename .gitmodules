@@ -1,3 +1,3 @@
-[submodule "Core/Client/cpp-mirai-client"]
+[submodule "ElanorCore/Core/Client/cpp-mirai-client"]
 	path = ElanorCore/Core/Client/cpp-mirai-client
 	url = git@github.com:numendacil/cpp-mirai-client.git
