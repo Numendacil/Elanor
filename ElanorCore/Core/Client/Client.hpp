@@ -9,6 +9,7 @@
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <stdexcept>
 #include <thread>
 #include <utility>
 
@@ -21,7 +22,7 @@ namespace Mirai
 class MiraiClient;
 class SessionConfigs;
 
-} // namespace Mirai
+}
 
 namespace Bot
 {
@@ -36,6 +37,7 @@ protected:
 	std::thread _th;
 
 	bool _connected;
+	bool _paused;
 
 	struct Message
 	{
@@ -70,24 +72,55 @@ public:
 
 	~Client();
 
-	Mirai::MiraiClient& GetMiraiClient() { return *(this->_client); }
-
-	// template <typename T>
-	// void On(const std::function<void(T)>& ep)
-	// {
-	// 	return this->client->On<T>(ep);
-	// }
+	Mirai::MiraiClient* operator->()
+	{
+		std::unique_lock<std::mutex> lk(this->_mtx);
+		this->_cv.wait(lk, [this]() -> bool {
+			if (!this->_connected) return true;
+			return !_paused;
+		});
+		if (!this->_connected)
+			throw std::runtime_error("Connection Lost");
+		return this->_client.get();
+	}
 
 	void Connect(const Mirai::SessionConfigs& opts);
-	void Reconnect();
 	void Disconnect();
-	bool isConnected() { return this->_connected; }
+	bool isConnected() 
+	{ 
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		return this->_connected; 
+	}
+
+	void Pause()
+	{
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		this->_paused = true;
+		this->_cv.notify_all();
+	}
+	void Resume()
+	{
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		this->_paused = false;
+		this->_cv.notify_all();
+	}
+	bool isRunning()
+	{ 
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		return !this->_paused; 
+	}
 
 	// template<typename F, typename... Args>
 	// auto Call(F&& f, Args&&... args)
 	// {
-	// 	std::lock_guard<std::mutex> lk(this->client_mtx);
-	// 	return std::invoke(std::forward<F>(f), this->client, std::forward<Args>(args)...);
+	// 	std::unique_lock<std::mutex> lk(this->_mtx);
+	// 	this->_cv.wait(lk, [this]() -> bool {
+	// 		if (!this->_connected) return true;
+	// 		return !_paused;
+	// 	});
+	// 	if (!this->_connected)
+	// 		throw std::runtime_error("Connection Lost");
+	// 	return std::invoke(std::forward<F>(f), this->_client, std::forward<Args>(args)...);
 	// }
 
 	std::future<Mirai::MessageId_t> SendGroupMessage(Mirai::GID_t, const Mirai::MessageChain&,

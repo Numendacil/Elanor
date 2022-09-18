@@ -41,7 +41,7 @@ std::unordered_map<string, std::unique_ptr<State::StateBase>> RegisterStates()
 } // namespace
 
 
-Group::Group(Mirai::GID_t group_id, Mirai::QQ_t owner_id)
+Group::Group(Mirai::GID_t group_id)
 	: gid(group_id), _states(RegisterStates())
 {
 }

@@ -21,18 +21,20 @@ public:
 	bool FromFile(const std::string& filepath);
 
 	template<typename T>
-	T Get(const nlohmann::json::json_pointer& key, const T& value) const
+	T Get(const std::string& key, const T& value) const
 	{
-		if (this->config.contains(key))
-			return this->config.at(key).get<T>();
+		auto jp = nlohmann::json::json_pointer(key);
+		if (this->config.contains(jp))
+			return this->config.at(jp).get<T>();
 		else
 			return value;
 	}
 	template<typename T>
-	std::optional<T> Get(const nlohmann::json::json_pointer& key) const
+	std::optional<T> Get(const std::string& key) const
 	{
-		if (this->config.contains(key))
-			return this->config.at(key).get<T>();
+		auto jp = nlohmann::json::json_pointer(key);
+		if (this->config.contains(jp))
+			return this->config.at(jp).get<T>();
 		else
 			return std::nullopt;
 	}

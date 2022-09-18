@@ -26,12 +26,12 @@ namespace GroupCommand
 {
 
 static constexpr int GROUP_COMMAND_DEFAULT_PRIORITY = 10;
-// static constexpr int GROUP_COMMAND_DEFAULT_PERMISSION = 0;
+static constexpr int GROUP_COMMAND_DEFAULT_PERMISSION = 0;
 
 class IGroupCommand
 {
 public:
-	// virtual int Permission() const { return GROUP_COMMAND_DEFAULT_PERMISSION; }
+	virtual int Permission() const { return GROUP_COMMAND_DEFAULT_PERMISSION; }
 	virtual int Priority() const { return GROUP_COMMAND_DEFAULT_PRIORITY; }
 	virtual bool Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client, Utils::BotConfig& config) = 0;
 

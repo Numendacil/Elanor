@@ -1,5 +1,5 @@
 target_sources(
-	${ELANORBOT_CORE} PUBLIC
+	${ELANORBOT_CORE} PRIVATE
 	Common.hpp
 	Common.cpp
 	Logger.hpp

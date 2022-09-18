@@ -22,7 +22,7 @@ constexpr int MAX_RETRY = 3;
 namespace Bot
 {
 
-Client::Client() : _connected(false), _interval(std::chrono::milliseconds(INTERVAL))
+Client::Client() : _connected(false), _paused(false), _interval(std::chrono::milliseconds(INTERVAL))
 {
 	this->_client = std::make_unique<MiraiClient>();
 	this->_client->SetLogger(::Utils::GetLoggerPtr());
@@ -32,7 +32,7 @@ Client::~Client()
 	if (this->_connected)
 	{
 		this->_connected = false;
-		this->_cv.notify_one();
+		this->_cv.notify_all();
 		if (this->_th.joinable()) this->_th.join();
 		this->_client->Disconnect();
 	}
@@ -49,7 +49,7 @@ void Client::MsgQueue()
 			               [this]() -> bool
 			               {
 							   if (!this->_connected) return true;
-							   return !this->_messages.empty();
+							   return !this->_messages.empty() && !this->_paused;
 						   });
 			if (!this->_connected) return;
 			msg = std::move(this->_messages.front());
@@ -96,7 +96,7 @@ std::future<Mirai::MessageId_t> Client::SendGroupMessage(GID_t GroupId, const Me
 	auto SendId =
 		this->_messages.emplace(GroupId, 0_qq, msg, QuoteId, Message::GROUP, std::promise<Mirai::MessageId_t>{}, 0)
 			.SendId.get_future();
-	this->_cv.notify_one();
+	this->_cv.notify_all();
 	return SendId;
 }
 
@@ -107,7 +107,7 @@ std::future<Mirai::MessageId_t> Client::SendFriendMessage(QQ_t qq, const Message
 	auto SendId =
 		this->_messages.emplace(0_gid, qq, msg, QuoteId, Message::FRIEND, std::promise<Mirai::MessageId_t>{}, 0)
 			.SendId.get_future();
-	this->_cv.notify_one();
+	this->_cv.notify_all();
 	return SendId;
 }
 
@@ -118,7 +118,7 @@ std::future<Mirai::MessageId_t> Client::SendTempMessage(GID_t GroupId, QQ_t qq, 
 	auto SendId =
 		this->_messages.emplace(GroupId, qq, msg, QuoteId, Message::TEMP, std::promise<Mirai::MessageId_t>{}, 0)
 			.SendId.get_future();
-	this->_cv.notify_one();
+	this->_cv.notify_all();
 	return SendId;
 }
 
@@ -127,13 +127,15 @@ void Client::Connect(const SessionConfigs& opts)
 	this->_client->SetSessionConfig(opts);
 	this->_client->Connect();
 	this->_connected = true;
+	this->_paused = false;
 	this->_th = std::thread(&Client::MsgQueue, this);
 }
 
 void Client::Disconnect()
 {
 	this->_connected = false;
-	this->_cv.notify_one();
+	this->_paused = false;
+	this->_cv.notify_all();
 	if (this->_th.joinable()) this->_th.join();
 	this->_client->Disconnect();
 }

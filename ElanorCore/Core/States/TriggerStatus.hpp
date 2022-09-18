@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <cassert>
 
 #include "StateBase.hpp"
 

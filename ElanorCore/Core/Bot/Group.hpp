@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <utility>
 #include <vector>
+#include <cassert>
 
 #include <Core/States/StateBase.hpp>
 #include <Core/Utils/Logger.hpp>
@@ -36,7 +37,7 @@ protected:
 	};
 
 public:
-	Group(Mirai::GID_t group_id, Mirai::QQ_t owner_id);
+	Group(Mirai::GID_t group_id);
 	Group(const Group&) = delete;
 	Group& operator=(const Group&) = delete;
 	Group(Group&&) = delete;

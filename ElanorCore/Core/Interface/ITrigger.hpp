@@ -34,6 +34,7 @@ public:
 
 	virtual void Action(Bot::GroupList& groups, Bot::Client& client, Utils::BotConfig& config) = 0;
 	virtual time_t GetNext() = 0;
+	virtual bool isDefaultOn() const { return false; }
 
 	virtual ~ITrigger() = default;
 };
