@@ -143,27 +143,29 @@ void ElanorBot::_OffloadPlugins()
 
 void ElanorBot::Start(const Mirai::SessionConfigs &opts)
 {
-	std::lock_guard<std::mutex> lk(this->_MemberMtx);
-	this->_LoadPlugins(this->_config.Get<std::string>("PluginsFolder", "./Plugins"));
+	{
+		std::lock_guard<std::mutex> lk(this->_MemberMtx);
+		this->_LoadPlugins(this->_config.Get<std::string>("/PluginsFolder", "./Plugins"));
 
-	this->_groups.SetSuid(this->_config.Get<Mirai::QQ_t>("suid", {}));
+		this->_groups.SetSuid(this->_config.Get<Mirai::QQ_t>("/suid", {}));
 
-	std::vector<std::pair<std::string, int>> command_list;
-	for (const auto& p : this->_GroupCommands)
-		command_list.emplace_back(p.name, p.data->Permission());
-	this->_groups.SetCommands(std::move(command_list));
+		std::vector<std::pair<std::string, int>> command_list;
+		for (const auto& p : this->_GroupCommands)
+			command_list.emplace_back(p.name, p.data->Permission());
+		this->_groups.SetCommands(std::move(command_list));
 
-	std::vector<std::pair<std::string, bool>> trigger_list;
-	for (const auto& p : this->_triggers)
-		trigger_list.emplace_back(p.name, p.data->isDefaultOn());
+		std::vector<std::pair<std::string, bool>> trigger_list;
+		for (const auto& p : this->_triggers)
+			trigger_list.emplace_back(p.name, p.data->isDefaultOn());
 
-	this->_groups.LoadGroups(this->_config.Get<std::string>("BotFolder", "./Bots"));
+		this->_groups.LoadGroups(this->_config.Get<std::string>("/BotFolder", "./Bots"));
+	}
 
 	this->_timer.LaunchLoop([this]{ 
 		auto groups = this->_groups.GetAllGroups();
 		for (const auto& p : groups)
 		{
-			p->ToFile(this->_config.Get<std::filesystem::path>("BotFolder", "./Bots") / p->gid.to_string());
+			p->ToFile(this->_config.Get<std::filesystem::path>("/BotFolder", "./Bots") / p->gid.to_string());
 			std::this_thread::sleep_for(1s);
 		}
 	}, 1h);
@@ -228,23 +230,37 @@ void ElanorBot::Start(const Mirai::SessionConfigs &opts)
 	{
 		LOG_WARN(Utils::GetLogger(), ex.what());
 	}
-	LOG_INFO(Utils::GetLogger(), "Bot Working...");
 
-	this->_running = true;
-	for (const auto& p : this->_triggers)
 	{
-		Trigger::ITrigger* trigger = p.data.get();
-		this->_timer.Launch([this, trigger]{ trigger->Action(this->_groups, this->_client, this->_config); }, [trigger]{ return trigger->GetNext(); });
+		std::lock_guard<std::mutex> lk(this->_MemberMtx);
+		this->_running = true;
+		for (const auto& p : this->_triggers)
+		{
+			Trigger::ITrigger* trigger = p.data.get();
+			this->_timer.Launch([this, trigger]{ trigger->Action(this->_groups, this->_client, this->_config); }, [trigger]{ return trigger->GetNext(); });
+		}
 	}
+	
+	LOG_INFO(Utils::GetLogger(), "Triggers enabled, Elanor working...");
 }
 
 void ElanorBot::Stop()
 {
-	std::lock_guard<std::mutex> lk(this->_MemberMtx);
-	this->_timer.StopAll();
-	this->_running = false;
+	LOG_INFO(Utils::GetLogger(), "Shutting down Elanor...");
+	{
+		std::lock_guard<std::mutex> lk(this->_MemberMtx);
+		this->_timer.StopAll();
+		LOG_INFO(Utils::GetLogger(), "Timers stopped");
+		this->_running = false;
+	}
+
 	this->_client.Disconnect();
-	this->_OffloadPlugins();
+	LOG_INFO(Utils::GetLogger(), "mirai-api-http disconnected");
+
+	{
+		std::lock_guard<std::mutex> lk(this->_MemberMtx);
+		this->_OffloadPlugins();
+	}
 }
 
 void ElanorBot::_NudgeEventHandler(Mirai::NudgeEvent& e)

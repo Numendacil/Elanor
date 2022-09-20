@@ -1,6 +1,7 @@
 #ifndef _TIMER_HPP_
 #define _TIMER_HPP_
 
+#include <string>
 #include <thread>
 #include <chrono>
 #include <vector>
@@ -27,13 +28,13 @@ public:
 
 	void Stop(size_t id)
 	{
-		std::lock_guard<std::mutex> lk(this->mtx);
-		for (auto& p : this->worker)
+		for (auto& p : this->_worker)
 		{
+			std::lock_guard<std::mutex> lk(this->_mtx);
 			if (p.second.id == id)
 			{
 				p.second.stop = true;
-				cv.notify_all();
+				this->_cv.notify_all();
 				if (p.first.joinable())
 					p.first.join();
 			}
@@ -42,19 +43,21 @@ public:
 
 	void StopAll()
 	{
-		std::lock_guard<std::mutex> lk(this->mtx);
-		for (auto& p : this->worker)
-			p.second.stop = true;
-		cv.notify_all();
-		for (auto& p : this->worker)
+		{
+			std::lock_guard<std::mutex> lk(this->_mtx);
+			for (auto& p : this->_worker)
+				p.second.stop = true;
+			this->_cv.notify_all();
+		}
+		for (auto& p : this->_worker)
 			if (p.first.joinable())
 				p.first.join();
 	}
 	
 	bool IsRunning(size_t id)
 	{
-		std::lock_guard<std::mutex> lk(this->mtx);
-		for (auto& p : this->worker)
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		for (auto& p : this->_worker)
 		{
 			if (p.second.id == id)
 				return !p.second.finished;
@@ -78,9 +81,9 @@ private:
 		bool stop = false;
 	};
 
-	std::vector<std::pair<std::thread, WorkerState>> worker;
-	std::mutex mtx;
-	std::condition_variable cv;
+	std::vector<std::pair<std::thread, WorkerState>> _worker;
+	std::mutex _mtx;
+	std::condition_variable _cv;
 	std::size_t id_count = 0;
 };
 

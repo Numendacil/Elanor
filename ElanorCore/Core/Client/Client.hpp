@@ -79,8 +79,8 @@ public:
 			if (!this->_connected) return true;
 			return !_paused;
 		});
-		if (!this->_connected)
-			throw std::runtime_error("Connection Lost");
+		// if (!this->_connected)
+		// 	throw std::runtime_error("Connection Lost");
 		return this->_client.get();
 	}
 

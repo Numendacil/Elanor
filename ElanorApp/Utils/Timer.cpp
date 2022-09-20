@@ -10,31 +10,31 @@ namespace Utils
 std::size_t Timer::GetWorker()
 {
 	this->id_count++;
-	for (size_t i = 0; i < this->worker.size(); ++i)
+	for (size_t i = 0; i < this->_worker.size(); ++i)
 	{
-		if (this->worker[i].second.finished)
+		if (this->_worker[i].second.finished)
 		{
-			if (this->worker[i].first.joinable())
-				this->worker[i].first.join();
-			this->worker[i].second = {this->id_count, false, false};
+			if (this->_worker[i].first.joinable())
+				this->_worker[i].first.join();
+			this->_worker[i].second = {this->id_count, false, false};
 			return i;
 		}
 	}
-	this->worker.push_back(make_pair<std::thread, WorkerState>(std::thread(), {this->id_count, false, false}));
-	return this->worker.size() - 1;
+	this->_worker.push_back(make_pair<std::thread, WorkerState>(std::thread(), {this->id_count, false, false}));
+	return this->_worker.size() - 1;
 }
 
 
 
 std::size_t Timer::LaunchOnce(std::function<void()> func, std::chrono::milliseconds delay)
 {
-	std::lock_guard<std::mutex> lk(this->mtx);
+	std::lock_guard<std::mutex> lk(this->_mtx);
 	size_t idx = this->GetWorker();
-	this->worker[idx].first = std::thread([this, func, delay, idx]
+	this->_worker.at(idx).first = std::thread([this, func, delay, idx]
 	{
 		{
-			std::unique_lock<std::mutex> lk(this->mtx);
-			if (cv.wait_for(lk, delay, [this, idx]{ return this->worker[idx].second.stop;}))
+			std::unique_lock<std::mutex> lk(this->_mtx);
+			if (this->_cv.wait_for(lk, delay, [this, idx]{ return this->_worker.at(idx).second.stop;}))
 				return;
 		}
 
@@ -48,30 +48,30 @@ std::size_t Timer::LaunchOnce(std::function<void()> func, std::chrono::milliseco
 		}
 
 		{
-			std::lock_guard<std::mutex> lk(this->mtx);
-			this->worker[idx].second.finished = true;
+			std::lock_guard<std::mutex> lk(this->_mtx);
+			this->_worker.at(idx).second.finished = true;
 		}
 	});
-	return this->worker[idx].second.id;
+	return this->_worker.at(idx).second.id;
 }
 
 
 
 std::size_t Timer::LaunchLoop(std::function<void()> func, std::chrono::milliseconds interval, bool RandStart)
 {
-	std::lock_guard<std::mutex> lk(this->mtx);
+	std::lock_guard<std::mutex> lk(this->_mtx);
 	size_t idx = this->GetWorker();
-	this->worker[idx].first = std::thread([this, func, interval, RandStart, idx]
+	this->_worker.at(idx).first = std::thread([this, func, interval, RandStart, idx]
 	{
 		if (RandStart)
 		{
 			std::uniform_real_distribution<float> dist(0, 1);
 			auto pre = interval * dist(Utils::GetRngEngine());
 			{
-				std::unique_lock<std::mutex> lk(this->mtx);
-				if (cv.wait_for(lk, pre, [this, idx]{ return this->worker[idx].second.stop;}))
+				std::unique_lock<std::mutex> lk(this->_mtx);
+				if (this->_cv.wait_for(lk, pre, [this, idx]{ return this->_worker.at(idx).second.stop;}))
 				{
-					this->worker[idx].second.finished = true;
+					this->_worker.at(idx).second.finished = true;
 					return;
 				}
 			}
@@ -89,35 +89,36 @@ std::size_t Timer::LaunchLoop(std::function<void()> func, std::chrono::milliseco
 			}
 
 			{
-				std::unique_lock<std::mutex> lk(this->mtx);
-				if (cv.wait_for(lk, interval, [this, idx]{ return this->worker[idx].second.stop;}))
+				std::unique_lock<std::mutex> lk(this->_mtx);
+				if (this->_cv.wait_for(lk, interval, [this, idx]{ return this->_worker.at(idx).second.stop; }))
 				{
-					this->worker[idx].second.finished = true;
+					this->_worker.at(idx).second.finished = true;
+					LOG_INFO(Utils::GetLogger(), "exit <Timer::LaunchLoop>");
 					return;
 				}
 			}
 		}
 	});
-	return this->worker[idx].second.id;
+	return this->_worker.at(idx).second.id;
 }
 
 
 
 std::size_t Timer::Launch(std::function<void()> func, std::function<time_t()> GetNext, int num)
 {
-	std::lock_guard<std::mutex> lk(this->mtx);
+	std::lock_guard<std::mutex> lk(this->_mtx);
 	size_t idx = this->GetWorker();
-	this->worker[idx].first = std::thread([this, func, GetNext, num, idx]
+	this->_worker.at(idx).first = std::thread([this, func, GetNext, num, idx]
 	{
 		int count = 0;
 		while (true)
 		{
 			time_t t = GetNext();
 			{
-				std::unique_lock<std::mutex> lk(this->mtx);
-				if (cv.wait_until(lk, std::chrono::system_clock::from_time_t(t), [this, idx]{ return this->worker[idx].second.stop;}))
+				std::unique_lock<std::mutex> lk(this->_mtx);
+				if (this->_cv.wait_until(lk, std::chrono::system_clock::from_time_t(t), [this, idx]{ return this->_worker.at(idx).second.stop;}))
 				{
-					this->worker[idx].second.finished = true;
+					this->_worker.at(idx).second.finished = true;
 					return;
 				}
 			}
@@ -136,14 +137,14 @@ std::size_t Timer::Launch(std::function<void()> func, std::function<time_t()> Ge
 				count++;
 				if (count >= num)
 				{
-					std::unique_lock<std::mutex> lk(this->mtx);
-					this->worker[idx].second.finished = true;
+					std::unique_lock<std::mutex> lk(this->_mtx);
+					this->_worker.at(idx).second.finished = true;
 					return;
 				}
 			}
 		}
 	});
-	return this->worker[idx].second.id;
+	return this->_worker.at(idx).second.id;
 }
 
 }

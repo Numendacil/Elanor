@@ -24,6 +24,9 @@ target_compile_features(${ELANORBOT_CORE} PUBLIC cxx_std_20)
 target_link_libraries(${ELANORBOT_CORE} PUBLIC pthread)
 
 set_target_properties(${ELANORBOT_CORE} PROPERTIES INSTALL_RPATH "$\{ORIGIN\};${INSTALL_RPATH}")
+add_compile_definitions(MIRAI_LOGGING_LEVEL=1)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(Core/Bot)
 add_subdirectory(Core/Client)

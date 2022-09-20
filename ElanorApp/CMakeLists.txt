@@ -16,7 +16,7 @@ target_sources(
 )
 
 target_include_directories(${ELANORBOT_APP} PRIVATE .)
-target_link_libraries(${ELANORBOT_APP} PRIVATE ${CMAKE_PROJECT_NAME}::ElanorCore)
+target_link_libraries(${ELANORBOT_APP} PRIVATE ${CMAKE_PROJECT_NAME}::ElanorCore ${CMAKE_DL_LIBS})
 
 add_subdirectory(Utils)
 

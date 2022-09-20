@@ -7,6 +7,7 @@
 #include <thread>
 
 #include <Core/Utils/Logger.hpp>
+#include "libmirai/Utils/Logger.hpp"
 #include <libmirai/Api/Client.hpp>
 
 using namespace Mirai;
@@ -25,6 +26,7 @@ namespace Bot
 Client::Client() : _connected(false), _paused(false), _interval(std::chrono::milliseconds(INTERVAL))
 {
 	this->_client = std::make_unique<MiraiClient>();
+	::Utils::GetLogger().SetLoggingLevel(Mirai::LoggingLevels::DEBUG);
 	this->_client->SetLogger(::Utils::GetLoggerPtr());
 }
 Client::~Client()
