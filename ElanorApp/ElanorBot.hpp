@@ -67,10 +67,7 @@ public:
 	ElanorBot(ElanorBot&&) = delete;
 	ElanorBot& operator=(ElanorBot&&) = delete;
 
-	bool SetConfig(const std::string& filepath)
-	{
-		return this->_config.FromFile(filepath);
-	}
+	bool SetConfig(const std::string& filepath) { return this->_config.FromFile(filepath); }
 
 	void Start(const Mirai::SessionConfigs& opts);
 	void Stop();

@@ -1,11 +1,12 @@
 #include <exception>
-#include <string>
 #include <iostream>
+#include <string>
+
 #include <libmirai/mirai.hpp>
 
-#include "Core/Utils/Logger.hpp"
+#include <Core/Utils/Logger.hpp>
+
 #include "ElanorBot.hpp"
-#include "libmirai/Utils/Logger.hpp"
 
 using std::string;
 int main()
@@ -22,7 +23,7 @@ int main()
 		LOG_ERROR(Utils::GetLogger(), e.what());
 		return 0;
 	}
-	
+
 	Bot.Start(opts);
 
 	string cmd;
@@ -35,5 +36,4 @@ int main()
 		}
 	}
 	return 0;
-
 }

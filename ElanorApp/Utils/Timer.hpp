@@ -1,14 +1,14 @@
 #ifndef _TIMER_HPP_
 #define _TIMER_HPP_
 
+#include <chrono>
+#include <condition_variable>
+#include <functional>
+#include <mutex>
 #include <string>
 #include <thread>
-#include <chrono>
-#include <vector>
-#include <mutex>
-#include <condition_variable>
 #include <utility>
-#include <functional>
+#include <vector>
 
 namespace Utils
 {
@@ -35,8 +35,7 @@ public:
 			{
 				p.second.stop = true;
 				this->_cv.notify_all();
-				if (p.first.joinable())
-					p.first.join();
+				if (p.first.joinable()) p.first.join();
 			}
 		}
 	}
@@ -50,26 +49,21 @@ public:
 			this->_cv.notify_all();
 		}
 		for (auto& p : this->_worker)
-			if (p.first.joinable())
-				p.first.join();
+			if (p.first.joinable()) p.first.join();
 	}
-	
+
 	bool IsRunning(size_t id)
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx);
 		for (auto& p : this->_worker)
 		{
-			if (p.second.id == id)
-				return !p.second.finished;
+			if (p.second.id == id) return !p.second.finished;
 		}
 		return false;
 	}
 
 
-	~Timer()
-	{
-		this->StopAll();
-	}
+	~Timer() { this->StopAll(); }
 
 private:
 	std::size_t GetWorker();
@@ -87,6 +81,6 @@ private:
 	std::size_t id_count = 0;
 };
 
-}
+} // namespace Utils
 
 #endif
