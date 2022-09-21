@@ -120,6 +120,8 @@ void ElanorBot::_OffloadPlugins()
 	this->_triggers.clear();
 	for (auto&& p : this->_plugins)
 	{
+		API* api_table = static_cast<API*>(p.GetSym("api_table"));
+		api_table->ClosePlugin();
 		p.Close();
 	}
 	this->_plugins.clear();

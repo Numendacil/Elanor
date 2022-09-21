@@ -28,3 +28,4 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install libra
 
 add_subdirectory(ElanorApp)
 add_subdirectory(ElanorCore)
+add_subdirectory(Plugins)
