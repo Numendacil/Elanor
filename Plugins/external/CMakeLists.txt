@@ -11,4 +11,8 @@ target_link_libraries(PluginExternal INTERFACE croncpp::croncpp)
 target_link_libraries(PluginExternal INTERFACE utf8::cpp)
 target_link_libraries(PluginExternal INTERFACE stduuid)
 
-target_link_libraries(PluginExternal INTERFACE httplib)
+if(NOT TARGET httplib::httplib)
+find_package(httplib REQUIRED)
+# else build httplib from local subdirectory
+endif()
+target_link_libraries(PluginExternal INTERFACE httplib::httplib)

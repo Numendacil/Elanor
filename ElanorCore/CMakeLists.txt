@@ -29,6 +29,8 @@ add_compile_definitions(MIRAI_LOGGING_LEVEL=1)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(MIRAI_INSTALL ON CACHE BOOL "Install library" FORCE)
+
 add_subdirectory(Core/Bot)
 add_subdirectory(Core/Client)
 add_subdirectory(Core/Interface)

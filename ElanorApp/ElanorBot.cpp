@@ -64,6 +64,17 @@ void ElanorBot::_LoadPlugins(const std::filesystem::path& folder)
 			{
 				PluginLibrary lib;
 				lib.Open(entry.path());
+
+				if (!lib.GetSym("ApiTable"))
+				{
+					LOG_WARN(Utils::GetLogger(), 
+						"Failed to load symbol `ApiTable` from plugin " 
+						+ entry.path().filename().string() 
+						+ ", plugin ignored");
+					lib.Close();
+					continue;
+				}
+
 				this->_plugins.emplace_back(std::move(lib));
 			}
 			catch (const std::exception& e)
@@ -76,35 +87,35 @@ void ElanorBot::_LoadPlugins(const std::filesystem::path& folder)
 	for (int i = 0; i < this->_plugins.size(); i++)
 	{
 		const auto& plugin = this->_plugins.at(i);
-		API* api_table = static_cast<API*>(plugin.GetSym("api_table"));
+		API* ApiTable = static_cast<API*>(plugin.GetSym("ApiTable"));
 
-		api_table->InitPlugin();
+		ApiTable->InitPlugin();
 		LOG_INFO(Utils::GetLogger(),
-		         "Loaded plugin "s + api_table->GetPluginName() + ": " + api_table->GetPluginInfo());
+		         "Loaded plugin "s + ApiTable->GetPluginName() + ": " + ApiTable->GetPluginInfo());
 
-		int command_count = api_table->GetGroupCommandCount();
-		int trigger_count = api_table->GetTriggerCount();
+		int command_count = ApiTable->GetGroupCommandCount();
+		int trigger_count = ApiTable->GetTriggerCount();
 		LOG_INFO(Utils::GetLogger(),
 		         "Found "s + std::to_string(command_count) + " Group Commands, " + std::to_string(trigger_count)
 		             + " Triggers");
 
-		auto command_deleter = api_table->DeleteGroupCommand;
-		auto trigger_deleter = api_table->DeleteTrigger;
+		auto command_deleter = ApiTable->DeleteGroupCommand;
+		auto trigger_deleter = ApiTable->DeleteTrigger;
 
 		for (int idx = 0; idx < command_count; idx++)
 		{
 			this->_GroupCommands.emplace_back(
-				api_table->GetGroupCommandName(idx),
+				ApiTable->GetGroupCommandName(idx),
 				std::move(std::unique_ptr<GroupCommand::IGroupCommand, void (*)(GroupCommand::IGroupCommand*)>{
-					api_table->GetGroupCommand(idx), command_deleter}),
+					ApiTable->GetGroupCommand(idx), command_deleter}),
 				i);
 		}
 
 		for (int idx = 0; idx < trigger_count; idx++)
 		{
-			this->_triggers.emplace_back(api_table->GetTriggerName(idx),
+			this->_triggers.emplace_back(ApiTable->GetTriggerName(idx),
 			                             std::move(std::unique_ptr<Trigger::ITrigger, void (*)(Trigger::ITrigger*)>{
-											 api_table->GetTrigger(idx), trigger_deleter}),
+											 ApiTable->GetTrigger(idx), trigger_deleter}),
 			                             i);
 		}
 	}
@@ -120,8 +131,8 @@ void ElanorBot::_OffloadPlugins()
 	this->_triggers.clear();
 	for (auto&& p : this->_plugins)
 	{
-		API* api_table = static_cast<API*>(p.GetSym("api_table"));
-		api_table->ClosePlugin();
+		API* ApiTable = static_cast<API*>(p.GetSym("ApiTable"));
+		ApiTable->ClosePlugin();
 		p.Close();
 	}
 	this->_plugins.clear();
