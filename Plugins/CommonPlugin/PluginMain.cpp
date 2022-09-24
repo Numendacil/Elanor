@@ -1,4 +1,6 @@
-#include "CommonPlugin/MorningTrigger.hpp"
+#include "MorningTrigger.hpp"
+#include "RollDice.hpp"
+
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>
 
@@ -23,13 +25,15 @@ const char* GetPluginInfo()
 
 int GetGroupCommandCount()
 {
-	return 0;
+	return 1;
 }
 
 const char* GetGroupCommandName(int idx)
 {
 	switch(idx)
 	{
+	case 0:
+		return GroupCommand::RollDice::_NAME_.data();
 	default:
 		return "";
 	}
@@ -39,6 +43,8 @@ GroupCommand::IGroupCommand* GetGroupCommand(int idx)
 {
 	switch(idx)
 	{
+	case 0:
+		return new GroupCommand::RollDice;
 	default:
 		return nullptr;
 	}

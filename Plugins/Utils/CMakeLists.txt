@@ -3,4 +3,6 @@ target_sources(
 	
 	Common.hpp
 	Common.cpp
+	StringUtils.hpp
+	StringUtils.cpp
 )

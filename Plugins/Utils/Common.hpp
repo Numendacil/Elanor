@@ -1,5 +1,5 @@
-#ifndef _UTILS_HPP_
-#define _UTILS_HPP_
+#ifndef _UTILS_COMMON_HPP_
+#define _UTILS_COMMON_HPP_
 
 #include <optional>
 #include <random>
@@ -15,27 +15,31 @@ class Result;
 namespace Mirai
 {
 
-class GroupMessageEvent;
-class FriendMessageEvent;
+class GroupMember;
+class User;
 class MessageChain;
 
 } // namespace Mirai
+
+namespace Bot
+{
+
+class Group;
+
+}
 
 namespace Utils
 {
 
 std::string exec(const std::vector<std::string>& cmd);
 
-std::string ReplaceMark(std::string str);
-std::string ToLower(std::string str);
-constexpr int ToBool(std::string_view str);
-int Tokenize(const std::string& input, std::vector<std::string>& tokens, int max_count = -1);
-
 bool CheckHttpResponse(const httplib::Result& result, const std::string& Caller = "");
 void SetClientOptions(httplib::Client& cli);
 
-std::string GetDescription(const Mirai::GroupMessageEvent&, bool = true);
-std::string GetDescription(const Mirai::FriendMessageEvent&, bool = true);
+bool CheckAuth(const Mirai::GroupMember& member, const Bot::Group& group, int permission);
+
+std::string GetDescription(const Mirai::GroupMember& member, bool from = true);
+std::string GetDescription(const Mirai::User& user, bool from = true);
 
 std::string GetText(const Mirai::MessageChain& msg);
 

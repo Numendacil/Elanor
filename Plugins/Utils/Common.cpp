@@ -13,6 +13,9 @@
 #include <libmirai/mirai.hpp>
 
 #include <Core/Utils/Logger.hpp>
+#include <Core/Bot/Group.hpp>
+#include <Core/States/AccessCtrlList.hpp>
+#include <libmirai/Types/BasicTypes.hpp>
 
 using json = nlohmann::json;
 using std::pair;
@@ -22,16 +25,17 @@ using std::vector;
 
 namespace Utils
 {
+
 string exec(const vector<string>& cmd)
 {
 	string result = "";
 	vector<char*> param;
 	for (auto& str : cmd)
-		param.push_back(const_cast<char*>(str.c_str()));
+		param.push_back(const_cast<char*>(str.c_str()));	// NOLINT(*-const-cast)
 	param.push_back(nullptr);
 
 	pid_t pid{};
-	int p[2];
+	int p[2];		// NOLINT(*-avoid-c-arrays)
 	if (pipe(p) == -1)
 	{
 		perror("Failed to open pipe");
@@ -53,82 +57,16 @@ string exec(const vector<string>& cmd)
 	}
 	close(p[1]);
 
-	char buffer[1024];
-	ssize_t c;
-	while ((c = read(p[0], buffer, 1024)) > 0)
+	constexpr size_t BUFFER_SIZE = 1024;
+	char buffer[BUFFER_SIZE];		// NOLINT(*-avoid-c-arrays)
+	size_t c{};
+	while ((c = read(p[0], buffer, BUFFER_SIZE)) > 0)
 		result.append(buffer, c);
 	close(p[0]);
 	return result;
 }
 
-string ReplaceMark(string str)
-{
-	constexpr std::array<pair<string_view, string_view>, 12> ReplaceList{{
-		{"﹟", "#"}, 
-		{"？", "?"}, 
-		{"＃", "#"}, 
-		{"！", "!"}, 
-		{"。", "."}, 
-		{"，", ","},
-		{"“", "\""}, 
-		{"”", "\""}, 
-		{"‘", "\'"}, 
-		{"’", "\'"}, 
-		{"；", ";"}, 
-		{"：", ":"}
-	}};
-	for (const auto& p : ReplaceList)
-	{
-		string temp;
-		temp.reserve(str.size());
-		const auto end = str.end();
-		auto current = str.begin();
-		auto next = std::search(current, end, p.first.begin(), p.first.end());
-		while (next != end)
-		{
-			temp.append(current, next);
-			temp.append(p.second);
-			current = next + p.first.length();
-			next = std::search(current, end, p.first.begin(), p.first.end());
-		}
-		temp.append(current, next);
-		str.swap(temp);
-	}
-	return str;
-}
 
-string ToLower(string str)
-{
-	std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return tolower(c); });
-	return str;
-}
-
-// Lowercase input only
-constexpr int ToBool(string_view str)
-{
-	constexpr std::array TrueStr = {"1", "true", "on", "yes"};
-	constexpr std::array FalseStr = {"0", "false", "off", "no"};
-	static_assert(TrueStr.size() == FalseStr.size());
-	for (int i = 0; i < TrueStr.size(); i++)
-	{
-		if (str == string_view(TrueStr.at(i))) return 1;
-		if (str == string_view(FalseStr.at(i))) return 0;
-	}
-	return -1;
-}
-
-int Tokenize(const string& input, vector<string>& tokens, int max_count)
-{
-	std::istringstream iss(input);
-	string s;
-	int count = 0;
-	while (iss >> std::quoted(s) && count != max_count)
-	{
-		tokens.push_back(s);
-		count++;
-	}
-	return tokens.size();
-}
 
 bool CheckHttpResponse(const httplib::Result& result, const string& Caller)
 {
@@ -137,7 +75,7 @@ bool CheckHttpResponse(const httplib::Result& result, const string& Caller)
 		LOG_WARN(Utils::GetLogger(), "Connection to server failed <" + Caller + ">: " + to_string(result.error()));
 		return false;
 	}
-	if (result->status != 200)
+	if (result->status != 200)		// NOLINT(*-avoid-magic-numbers)
 	{
 		LOG_WARN(Utils::GetLogger(), "Error response from server <" + Caller + ">: " + result->body);
 		return false;
@@ -153,38 +91,77 @@ bool CheckHttpResponse(const httplib::Result& result, const string& Caller, int&
 		code = -1;
 		return false;
 	}
-	if (result->status != 200)
+	if (result->status != 200)		// NOLINT(*-avoid-magic-numbers)
 	{
 		LOG_WARN(Utils::GetLogger(), "Error response from server <" + Caller + ">: " + result->body);
 		code = result->status;
 		return false;
 	}
-	code = 200;
+	code = 200;		// NOLINT(*-avoid-magic-numbers)
 	return true;
 }
+
+
 
 void SetClientOptions(httplib::Client& cli)
 {
 	cli.set_compress(true);
 	cli.set_decompress(true);
-	cli.set_connection_timeout(300);
-	cli.set_read_timeout(300);
-	cli.set_write_timeout(120);
+	cli.set_connection_timeout(300);		// NOLINT(*-avoid-magic-numbers)
+	cli.set_read_timeout(300);				// NOLINT(*-avoid-magic-numbers)
+	cli.set_write_timeout(120);				// NOLINT(*-avoid-magic-numbers)
 	cli.set_keep_alive(true);
 }
 
-string GetDescription(const Mirai::GroupMessageEvent& gm, bool from)
+
+bool CheckAuth(const Mirai::GroupMember& member, const Bot::Group& group, int permission)
 {
-	string member = gm.GetSender().MemberName + "(" + gm.GetSender().id.to_string() + ")";
-	string group = gm.GetSender().group.name + "(" + gm.GetSender().group.id.to_string() + ")";
-	return ((from) ? "\t<- [" : "\t-> [") + member + ", " + group + "]";
+	auto ACList = group.GetState<State::AccessCtrlList>();
+
+	if (ACList->GetSuid() == member.id)
+		return true;
+	if (ACList->IsBlackList(member.id))
+		return false;
+
+	int auth = 0;
+	switch(member.permission)
+	{
+	case Mirai::PERMISSION::OWNER:
+		auth = 30;						// NOLINT(*-avoid-magic-numbers)
+		break;
+	case Mirai::PERMISSION::ADMINISTRATOR:
+		auth = 20;						// NOLINT(*-avoid-magic-numbers)
+		break;
+	case Mirai::PERMISSION::MEMBER:
+		auth = 10;						// NOLINT(*-avoid-magic-numbers)
+		break;
+	default:
+		auth = 0;						// NOLINT(*-avoid-magic-numbers)
+		break;
+	}
+
+	if (ACList->IsWhiteList(member.id))
+		auth = 50;						// NOLINT(*-avoid-magic-numbers)
+
+	return auth >= permission;
 }
 
-string GetDescription(const Mirai::FriendMessageEvent& fm, bool from)
+
+
+string GetDescription(const Mirai::GroupMember& member, bool from)
 {
-	string profile = fm.GetSender().nickname + "(" + fm.GetSender().id.to_string() + ")";
-	return ((from) ? "\t<- [" : "\t-> [") + profile + "]";
+	string member_str = member.MemberName + "(" + member.id.to_string() + ")";
+	string group_str = member.group.name + "(" + member.group.id.to_string() + ")";
+	return ((from) ? "\t<- [" : "\t-> [") + member_str + ", " + group_str + "]";
 }
+
+string GetDescription(const Mirai::User& user, bool from)
+{
+	string profile_str = user.nickname + "(" + user.id.to_string() + ")";
+	return ((from) ? "\t<- [" : "\t-> [") + profile_str + "]";
+}
+
+
 
 string GetText(const Mirai::MessageChain& msg)
 {
@@ -193,7 +170,7 @@ string GetText(const Mirai::MessageChain& msg)
 	{
 		if (p->GetType() == Mirai::PlainMessage::_TYPE_)
 		{
-			text += static_cast<Mirai::PlainMessage*>(p.get())->GetText();
+			text += static_cast<Mirai::PlainMessage*>(p.get())->GetText();		// NOLINT(*-static-cast-downcast)
 		}
 	}
 	return text;

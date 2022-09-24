@@ -7,4 +7,6 @@ target_sources(
 
 	MorningTrigger.hpp
 	MorningTrigger.cpp
+	RollDice.hpp
+	RollDice.cpp
 )
