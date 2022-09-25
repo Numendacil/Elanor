@@ -10,12 +10,12 @@
 
 #include <httplib.h>
 
+#include <libmirai/Types/BasicTypes.hpp>
 #include <libmirai/mirai.hpp>
 
-#include <Core/Utils/Logger.hpp>
 #include <Core/Bot/Group.hpp>
 #include <Core/States/AccessCtrlList.hpp>
-#include <libmirai/Types/BasicTypes.hpp>
+#include <Core/Utils/Logger.hpp>
 
 using json = nlohmann::json;
 using std::pair;
@@ -31,11 +31,11 @@ string exec(const vector<string>& cmd)
 	string result = "";
 	vector<char*> param;
 	for (auto& str : cmd)
-		param.push_back(const_cast<char*>(str.c_str()));	// NOLINT(*-const-cast)
+		param.push_back(const_cast<char*>(str.c_str())); // NOLINT(*-const-cast)
 	param.push_back(nullptr);
 
 	pid_t pid{};
-	int p[2];		// NOLINT(*-avoid-c-arrays)
+	int p[2]; // NOLINT(*-avoid-c-arrays)
 	if (pipe(p) == -1)
 	{
 		perror("Failed to open pipe");
@@ -58,14 +58,13 @@ string exec(const vector<string>& cmd)
 	close(p[1]);
 
 	constexpr size_t BUFFER_SIZE = 1024;
-	char buffer[BUFFER_SIZE];		// NOLINT(*-avoid-c-arrays)
+	char buffer[BUFFER_SIZE]; // NOLINT(*-avoid-c-arrays)
 	size_t c{};
 	while ((c = read(p[0], buffer, BUFFER_SIZE)) > 0)
 		result.append(buffer, c);
 	close(p[0]);
 	return result;
 }
-
 
 
 bool CheckHttpResponse(const httplib::Result& result, const string& Caller)
@@ -75,7 +74,7 @@ bool CheckHttpResponse(const httplib::Result& result, const string& Caller)
 		LOG_WARN(Utils::GetLogger(), "Connection to server failed <" + Caller + ">: " + to_string(result.error()));
 		return false;
 	}
-	if (result->status != 200)		// NOLINT(*-avoid-magic-numbers)
+	if (result->status != 200) // NOLINT(*-avoid-magic-numbers)
 	{
 		LOG_WARN(Utils::GetLogger(), "Error response from server <" + Caller + ">: " + result->body);
 		return false;
@@ -91,25 +90,24 @@ bool CheckHttpResponse(const httplib::Result& result, const string& Caller, int&
 		code = -1;
 		return false;
 	}
-	if (result->status != 200)		// NOLINT(*-avoid-magic-numbers)
+	if (result->status != 200) // NOLINT(*-avoid-magic-numbers)
 	{
 		LOG_WARN(Utils::GetLogger(), "Error response from server <" + Caller + ">: " + result->body);
 		code = result->status;
 		return false;
 	}
-	code = 200;		// NOLINT(*-avoid-magic-numbers)
+	code = 200; // NOLINT(*-avoid-magic-numbers)
 	return true;
 }
-
 
 
 void SetClientOptions(httplib::Client& cli)
 {
 	cli.set_compress(true);
 	cli.set_decompress(true);
-	cli.set_connection_timeout(300);		// NOLINT(*-avoid-magic-numbers)
-	cli.set_read_timeout(300);				// NOLINT(*-avoid-magic-numbers)
-	cli.set_write_timeout(120);				// NOLINT(*-avoid-magic-numbers)
+	cli.set_connection_timeout(300); // NOLINT(*-avoid-magic-numbers)
+	cli.set_read_timeout(300);       // NOLINT(*-avoid-magic-numbers)
+	cli.set_write_timeout(120);      // NOLINT(*-avoid-magic-numbers)
 	cli.set_keep_alive(true);
 }
 
@@ -118,34 +116,30 @@ bool CheckAuth(const Mirai::GroupMember& member, const Bot::Group& group, int pe
 {
 	auto ACList = group.GetState<State::AccessCtrlList>();
 
-	if (ACList->GetSuid() == member.id)
-		return true;
-	if (ACList->IsBlackList(member.id))
-		return false;
+	if (ACList->GetSuid() == member.id) return true;
+	if (ACList->IsBlackList(member.id)) return false;
 
 	int auth = 0;
-	switch(member.permission)
+	switch (member.permission)
 	{
 	case Mirai::PERMISSION::OWNER:
-		auth = 30;						// NOLINT(*-avoid-magic-numbers)
+		auth = 30; // NOLINT(*-avoid-magic-numbers)
 		break;
 	case Mirai::PERMISSION::ADMINISTRATOR:
-		auth = 20;						// NOLINT(*-avoid-magic-numbers)
+		auth = 20; // NOLINT(*-avoid-magic-numbers)
 		break;
 	case Mirai::PERMISSION::MEMBER:
-		auth = 10;						// NOLINT(*-avoid-magic-numbers)
+		auth = 10; // NOLINT(*-avoid-magic-numbers)
 		break;
 	default:
-		auth = 0;						// NOLINT(*-avoid-magic-numbers)
+		auth = 0; // NOLINT(*-avoid-magic-numbers)
 		break;
 	}
 
-	if (ACList->IsWhiteList(member.id))
-		auth = 50;						// NOLINT(*-avoid-magic-numbers)
+	if (ACList->IsWhiteList(member.id)) auth = 50; // NOLINT(*-avoid-magic-numbers)
 
 	return auth >= permission;
 }
-
 
 
 string GetDescription(const Mirai::GroupMember& member, bool from)
@@ -162,7 +156,6 @@ string GetDescription(const Mirai::User& user, bool from)
 }
 
 
-
 string GetText(const Mirai::MessageChain& msg)
 {
 	string text;
@@ -170,7 +163,7 @@ string GetText(const Mirai::MessageChain& msg)
 	{
 		if (p->GetType() == Mirai::PlainMessage::_TYPE_)
 		{
-			text += static_cast<Mirai::PlainMessage*>(p.get())->GetText();		// NOLINT(*-static-cast-downcast)
+			text += static_cast<Mirai::PlainMessage*>(p.get())->GetText(); // NOLINT(*-static-cast-downcast)
 		}
 	}
 	return text;

@@ -1,6 +1,9 @@
 
 #include "MorningTrigger.hpp"
+
 #include <ctime>
+
+#include <croncpp.h>
 
 #include <libmirai/mirai.hpp>
 
@@ -9,7 +12,6 @@
 #include <Core/Client/Client.hpp>
 #include <Core/States/TriggerStatus.hpp>
 #include <Core/Utils/Logger.hpp>
-#include <croncpp.h>
 
 
 namespace Trigger

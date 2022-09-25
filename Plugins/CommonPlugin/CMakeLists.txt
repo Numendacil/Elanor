@@ -4,9 +4,7 @@ target_sources(
 	CommonPlugin PRIVATE
 
 	PluginMain.cpp
-
-	MorningTrigger.hpp
-	MorningTrigger.cpp
-	RollDice.hpp
-	RollDice.cpp
 )
+
+add_subdirectory(GroupCommand)
+add_subdirectory(Trigger)

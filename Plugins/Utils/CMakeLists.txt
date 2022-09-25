@@ -5,4 +5,6 @@ target_sources(
 	Common.cpp
 	StringUtils.hpp
 	StringUtils.cpp
+
+	TypeList.hpp
 )

@@ -1,96 +1,110 @@
-#include "MorningTrigger.hpp"
-#include "RollDice.hpp"
+#include <Utils/TypeList.hpp>
+
+#include "GroupCommand/Answer.hpp"
+#include "GroupCommand/AtBot.hpp"
+#include "GroupCommand/Recall.hpp"
+#include "GroupCommand/Repeat.hpp"
+#include "GroupCommand/RollDice.hpp"
+#include "Trigger/MorningTrigger.hpp"
 
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>
 
+using GroupCommandList = Utils::TypeList< 
+	GroupCommand::Answer,
+	GroupCommand::AtBot,
+	GroupCommand::Recall,
+	GroupCommand::Repeat,
+	GroupCommand::RollDice
+>;
+using TriggerList = Utils::TypeList< Trigger::MorningTrigger >;
+
 extern "C"
 {
 
-void InitPlugin()
-{
-}
+	void InitPlugin() {}
 
 
-const char* GetPluginName()
-{
-	return "CommonPlugin";
-}
-
-const char* GetPluginInfo()
-{
-	return "Plugin for basic functions";
-}
-
-
-int GetGroupCommandCount()
-{
-	return 1;
-}
-
-const char* GetGroupCommandName(int idx)
-{
-	switch(idx)
+	const char* GetPluginName()
 	{
-	case 0:
-		return GroupCommand::RollDice::_NAME_.data();
-	default:
-		return "";
+		return "CommonPlugin";
 	}
-}
 
-GroupCommand::IGroupCommand* GetGroupCommand(int idx)
-{
-	switch(idx)
+	const char* GetPluginInfo()
 	{
-	case 0:
-		return new GroupCommand::RollDice;
-	default:
-		return nullptr;
+		return "Plugin for basic functions";
 	}
-}
-
-void DeleteGroupCommand(GroupCommand::IGroupCommand* cmd)
-{
-	delete cmd;		// NOLINT(cppcoreguidelines-owning-memory)
-}
 
 
-int GetTriggerCount()
-{
-	return 1;
-}
-
-const char* GetTriggerName(int idx)
-{
-	switch(idx)
+	size_t GetGroupCommandCount()
 	{
-	case 0:
-		return Trigger::MorningTrigger::_NAME_.data();
-	default:
-		return "";
+		return GroupCommandList::size;
 	}
-}
 
-Trigger::ITrigger* GetTrigger(int idx)
-{
-	switch(idx)
+	const char* GetGroupCommandName(size_t idx)
 	{
-	case 0:
-		return new Trigger::MorningTrigger;
-	default:
-		return nullptr;
+		const char* name = "";
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (name = GroupCommandList::At<Is>::type::_NAME_.data(), true) : false) || ...);
+		}
+		(std::make_integer_sequence<size_t, GroupCommandList::size>{});
+
+		return name;
 	}
-}
 
-void DeleteTrigger(Trigger::ITrigger* trigger)
-{
-	delete trigger;		// NOLINT(cppcoreguidelines-owning-memory)
-}
+	GroupCommand::IGroupCommand* GetGroupCommand(size_t idx)
+	{
+		GroupCommand::IGroupCommand* command = nullptr;
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (command = new GroupCommandList::At_t<Is>, true) : false)|| ...); // NOLINT(cppcoreguidelines-owning-memory)
+		}
+		(std::make_integer_sequence<size_t, GroupCommandList::size>{});
+
+		return command;
+	}
+
+	void DeleteGroupCommand(GroupCommand::IGroupCommand* cmd)
+	{
+		delete cmd; // NOLINT(cppcoreguidelines-owning-memory)
+	}
 
 
-void ClosePlugin()
-{
-}
+	size_t GetTriggerCount()
+	{
+		return 1;
+	}
 
+	const char* GetTriggerName(size_t idx)
+	{
+		const char* name = "";
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (name = TriggerList::At<Is>::type::_NAME_.data(), true) : false) || ...);
+		}
+		(std::make_integer_sequence<size_t, TriggerList::size>{});
+
+		return name;
+	}
+
+	Trigger::ITrigger* GetTrigger(size_t idx)
+	{
+		Trigger::ITrigger* trigger = nullptr;
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (trigger = new TriggerList::At_t<Is>, true) : false) || ...); // NOLINT(cppcoreguidelines-owning-memory)
+		}
+		(std::make_integer_sequence<size_t, TriggerList::size>{});
+
+		return trigger;
+	}
+
+	void DeleteTrigger(Trigger::ITrigger* trigger)
+	{
+		delete trigger; // NOLINT(cppcoreguidelines-owning-memory)
+	}
+
+
+	void ClosePlugin() {}
 }

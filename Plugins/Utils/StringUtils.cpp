@@ -1,18 +1,18 @@
 #include "StringUtils.hpp"
 
+#include <array>
 #include <exception>
 #include <iomanip>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <sstream>
 #include <vector>
-#include <array>
 
 using std::string;
-using std::vector;
 using std::string_view;
+using std::vector;
 using namespace std::literals;
 
 namespace Utils
@@ -21,16 +21,11 @@ namespace Utils
 namespace
 {
 
-const static std::regex r_float = std::regex(
-	R"([\+-]?(((\d*\.\d+)|(\d+(\.(0*))?))(e[\+-]?((\d*\.\d+)|(\d+(\.(0*))?)))?))",
-	std::regex::icase
-);
-const static std::regex r_int = std::regex(
-	R"([\+-]?((\d+(\.(0*))?)(e[\+]?\d+)?))",
-	std::regex::icase
-);
+const static std::regex r_float =
+	std::regex(R"([\+-]?(((\d*\.\d+)|(\d+(\.(0*))?))(e[\+-]?((\d*\.\d+)|(\d+(\.(0*))?)))?))", std::regex::icase);
+const static std::regex r_int = std::regex(R"([\+-]?((\d+(\.(0*))?)(e[\+]?\d+)?))", std::regex::icase);
 
-}
+} // namespace
 
 bool isFloat(string_view str)
 {
@@ -43,23 +38,20 @@ bool isInt(string_view str)
 }
 
 
-
 string ReplaceMark(string str)
 {
-	constexpr std::array<std::pair<string_view, string_view>, 12> MarkList {{
-		{"﹟", "#"}, 
-		{"？", "?"}, 
-		{"＃", "#"}, 
-		{"！", "!"}, 
-		{"。", "."}, 
-		{"，", ","},
-		{"“", "\""}, 
-		{"”", "\""}, 
-		{"‘", "\'"}, 
-		{"’", "\'"}, 
-		{"；", ";"}, 
-		{"：", ":"}
-	}};
+	constexpr std::array<std::pair<string_view, string_view>, 12> MarkList{{{"﹟", "#"},
+	                                                                        {"？", "?"},
+	                                                                        {"＃", "#"},
+	                                                                        {"！", "!"},
+	                                                                        {"。", "."},
+	                                                                        {"，", ","},
+	                                                                        {"“", "\""},
+	                                                                        {"”", "\""},
+	                                                                        {"‘", "\'"},
+	                                                                        {"’", "\'"},
+	                                                                        {"；", ";"},
+	                                                                        {"：", ":"}}};
 	for (const auto& p : MarkList)
 	{
 		string temp;
@@ -91,18 +83,16 @@ size_t Tokenize(const string& input, vector<string>& tokens, size_t max_count)
 	std::istringstream iss(input);
 	string s;
 
-	if (max_count > 0)
-		tokens.reserve(max_count);
+	if (max_count > 0) tokens.reserve(max_count);
 
 	while (iss >> std::quoted(s))
 	{
-	    if (max_count > 0 && tokens.size() >= max_count)
-		    tokens[max_count - 1] += ' ' + s;
+		if (max_count > 0 && tokens.size() >= max_count) tokens[max_count - 1] += ' ' + s;
 		else
-		    tokens.push_back(s);
+			tokens.push_back(s);
 	}
 
 	return tokens.size();
 }
 
-}
+} // namespace Utils

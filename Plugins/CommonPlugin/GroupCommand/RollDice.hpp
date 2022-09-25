@@ -11,9 +11,10 @@ class RollDice : public IGroupCommand
 public:
 	static constexpr std::string_view _NAME_ = "RollDice";
 
-	bool Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client, Utils::BotConfig& config) override;
+	bool Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client,
+	             Utils::BotConfig& config) override;
 };
 
-}
+} // namespace GroupCommand
 
 #endif
