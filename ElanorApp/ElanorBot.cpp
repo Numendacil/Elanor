@@ -13,6 +13,7 @@
 
 #include <Utils/PluginManager.hpp>
 
+#include <libmirai/Types/BasicTypes.hpp>
 #include <libmirai/mirai.hpp>
 
 #include <Core/Interface/IGroupCommand.hpp>
@@ -21,9 +22,6 @@
 #include <Core/States/States.hpp>
 #include <Core/Utils/Common.hpp>
 #include <Core/Utils/Logger.hpp>
-
-#include "libmirai/Types/BasicTypes.hpp"
-#include "libmirai/Utils/Logger.hpp"
 
 using std::pair;
 using std::string;
@@ -41,7 +39,6 @@ ElanorBot::ElanorBot() = default;
 void ElanorBot::_run()
 {
 	if (this->_running) return;
-	assert(!this->_client.isRunning());
 	this->_client.Resume();
 	this->_running = true;
 }
@@ -49,7 +46,6 @@ void ElanorBot::_run()
 void ElanorBot::_stop()
 {
 	if (!this->_running) return;
-	assert(this->_client.isRunning());
 	this->_client.Pause();
 	this->_running = false;
 }
@@ -67,10 +63,9 @@ void ElanorBot::_LoadPlugins(const std::filesystem::path& folder)
 
 				if (!lib.GetSym("ApiTable"))
 				{
-					LOG_WARN(Utils::GetLogger(), 
-						"Failed to load symbol `ApiTable` from plugin " 
-						+ entry.path().filename().string() 
-						+ ", plugin ignored");
+					LOG_WARN(Utils::GetLogger(),
+					         "Failed to load symbol `ApiTable` from plugin " + entry.path().filename().string()
+					             + ", plugin ignored");
 					lib.Close();
 					continue;
 				}
@@ -90,33 +85,34 @@ void ElanorBot::_LoadPlugins(const std::filesystem::path& folder)
 		API* ApiTable = static_cast<API*>(plugin.GetSym("ApiTable"));
 
 		ApiTable->InitPlugin();
-		LOG_INFO(Utils::GetLogger(),
-		         "Loaded plugin "s + ApiTable->GetPluginName() + ": " + ApiTable->GetPluginInfo());
+		LOG_INFO(Utils::GetLogger(), "Loaded plugin "s + ApiTable->GetPluginName() + ": " + ApiTable->GetPluginInfo());
 
-		int command_count = ApiTable->GetGroupCommandCount();
-		int trigger_count = ApiTable->GetTriggerCount();
-		LOG_INFO(Utils::GetLogger(),
-		         "Found "s + std::to_string(command_count) + " Group Commands, " + std::to_string(trigger_count)
-		             + " Triggers");
+		size_t command_count = ApiTable->GetGroupCommandCount();
+		size_t trigger_count = ApiTable->GetTriggerCount();
+		LOG_DEBUG(Utils::GetLogger(),
+		          "Found "s + std::to_string(command_count) + " Group Commands, " + std::to_string(trigger_count)
+		              + " Triggers");
 
 		auto command_deleter = ApiTable->DeleteGroupCommand;
 		auto trigger_deleter = ApiTable->DeleteTrigger;
 
-		for (int idx = 0; idx < command_count; idx++)
+		for (size_t idx = 0; idx < command_count; idx++)
 		{
 			this->_GroupCommands.emplace_back(
 				ApiTable->GetGroupCommandName(idx),
 				std::move(std::unique_ptr<GroupCommand::IGroupCommand, void (*)(GroupCommand::IGroupCommand*)>{
 					ApiTable->GetGroupCommand(idx), command_deleter}),
 				i);
+			LOG_DEBUG(Utils::GetLogger(), string(ApiTable->GetGroupCommandName(idx)) + " <GroupCommand> loaded");
 		}
 
-		for (int idx = 0; idx < trigger_count; idx++)
+		for (size_t idx = 0; idx < trigger_count; idx++)
 		{
 			this->_triggers.emplace_back(ApiTable->GetTriggerName(idx),
 			                             std::move(std::unique_ptr<Trigger::ITrigger, void (*)(Trigger::ITrigger*)>{
 											 ApiTable->GetTrigger(idx), trigger_deleter}),
 			                             i);
+			LOG_DEBUG(Utils::GetLogger(), string(ApiTable->GetTriggerName(idx)) + " <Trigger> loaded");
 		}
 	}
 

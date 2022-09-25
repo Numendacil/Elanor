@@ -26,6 +26,8 @@ project(ElanorBot LANGUAGES CXX VERSION 1.0.0)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install library in the current directory" FORCE)
 
+add_compile_definitions(MIRAI_LOGGING_LEVEL=1)
+
 add_subdirectory(ElanorApp)
 add_subdirectory(ElanorCore)
 add_subdirectory(Plugins)

@@ -35,8 +35,7 @@ void CommandPerm::Deserialize(const json& content)
 	std::lock_guard<std::mutex> lk(this->_mtx);
 	for (const auto& p : content.items())
 	{
-		if (p.value().contains("current")) 
-			this->_permissions[p.key()].first = p.value().at("current").get<int>();
+		if (p.value().contains("current")) this->_permissions[p.key()].first = p.value().at("current").get<int>();
 		// if (p.value().contains("default")) this->_permissions[p.key()].second = p.value()["default"].get<int>();
 	}
 }

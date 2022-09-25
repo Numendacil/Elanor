@@ -6,10 +6,10 @@
 #include <string_view>
 #include <unordered_set>
 
+#include <libmirai/Types/BasicTypes.hpp>
 #include <libmirai/Types/Types.hpp>
 
 #include "StateBase.hpp"
-#include "libmirai/Types/BasicTypes.hpp"
 
 namespace State
 {

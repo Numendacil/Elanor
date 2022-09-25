@@ -6,9 +6,9 @@
 #include <stdexcept>
 #include <thread>
 
-#include <Core/Utils/Logger.hpp>
-#include "libmirai/Utils/Logger.hpp"
 #include <libmirai/Api/Client.hpp>
+
+#include <Core/Utils/Logger.hpp>
 
 using namespace Mirai;
 

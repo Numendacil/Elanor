@@ -13,7 +13,7 @@ namespace Bot
 class Client;
 class Group;
 
-}
+} // namespace Bot
 
 namespace Utils
 {
@@ -33,7 +33,8 @@ class IGroupCommand
 public:
 	virtual int Permission() const { return GROUP_COMMAND_DEFAULT_PERMISSION; }
 	virtual int Priority() const { return GROUP_COMMAND_DEFAULT_PRIORITY; }
-	virtual bool Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client, Utils::BotConfig& config) = 0;
+	virtual bool Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client,
+	                     Utils::BotConfig& config) = 0;
 
 	virtual ~IGroupCommand() = default;
 };

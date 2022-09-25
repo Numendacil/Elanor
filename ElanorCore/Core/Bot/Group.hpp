@@ -1,18 +1,19 @@
 #ifndef _ELANOR_CORE_GROUP_HPP_
 #define _ELANOR_CORE_GROUP_HPP_
 
+#include <cassert>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
-#include <filesystem>
 #include <utility>
 #include <vector>
-#include <cassert>
+
+#include <libmirai/Types/BasicTypes.hpp>
 
 #include <Core/States/StateBase.hpp>
 #include <Core/Utils/Logger.hpp>
-#include <libmirai/Types/BasicTypes.hpp>
 
 namespace Bot
 {

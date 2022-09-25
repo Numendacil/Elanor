@@ -1,12 +1,12 @@
 #ifndef _ELANOR_CORE_COMMAND_PERMISSION_HPP_
 #define _ELANOR_CORE_COMMAND_PERMISSION_HPP_
 
+#include <cassert>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <cassert>
 
 #include "StateBase.hpp"
 

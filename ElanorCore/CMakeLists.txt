@@ -25,7 +25,6 @@ target_link_libraries(${ELANORBOT_CORE} PUBLIC pthread)
 
 set_target_properties(${ELANORBOT_CORE} PROPERTIES INSTALL_RPATH "$\{ORIGIN\};${INSTALL_RPATH}")
 set_target_properties(${ELANORBOT_CORE} PROPERTIES PREFIX "")
-add_compile_definitions(MIRAI_LOGGING_LEVEL=1)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

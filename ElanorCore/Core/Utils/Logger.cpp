@@ -14,8 +14,10 @@ std::string GetTimestamp()
 	using namespace std::chrono;
 	auto tp = system_clock::now();
 	std::time_t t = system_clock::to_time_t(tp);
-	char buf[64];
-	std::strftime(buf, 64, "\x1b[95m%Y-%m-%d %H:%M:%S\x1b[0m", std::localtime(&t));
+
+	constexpr size_t BUFFER_SIZE = 128;
+	char buf[BUFFER_SIZE]; // NOLINT(*-avoid-c-arrays)
+	std::strftime(buf, BUFFER_SIZE, "\x1b[95m%Y-%m-%d %H:%M:%S\x1b[0m", std::localtime(&t));
 	return {buf};
 }
 
@@ -56,7 +58,7 @@ void Logger::log(const std::string& msg, Mirai::LoggingLevels level)
 namespace
 {
 
-std::shared_ptr<Logger> logger = std::make_shared<Logger>();
+std::shared_ptr<Logger> logger = std::make_shared<Logger>(); // NOLINT(*-avoid-non-const-global-variables)
 
 }
 

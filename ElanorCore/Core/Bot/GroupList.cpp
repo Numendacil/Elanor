@@ -6,10 +6,10 @@
 #include <string>
 #include <vector>
 
-#include <Core/Utils/Logger.hpp>
+#include <Core/States/AccessCtrlList.hpp>
 #include <Core/States/CommandPerm.hpp>
 #include <Core/States/TriggerStatus.hpp>
-#include <Core/States/AccessCtrlList.hpp>
+#include <Core/Utils/Logger.hpp>
 
 using std::pair;
 using std::string;
@@ -30,8 +30,7 @@ void GroupList::LoadGroups(std::filesystem::path folder)
 
 				std::lock_guard<std::mutex> lk(this->_mtx);
 				auto it = this->_list.find(gid);
-				if (it != this->_list.end()) 
-					it->second.FromFile(entry.path());
+				if (it != this->_list.end()) it->second.FromFile(entry.path());
 				else
 				{
 					auto result = this->_list.try_emplace(gid, gid);
@@ -59,7 +58,8 @@ void GroupList::LoadGroups(std::filesystem::path folder)
 			catch (const std::logic_error& e)
 			{
 				LOG_WARN(Utils::GetLogger(),
-				         "Unexpected file found in " + string(folder) + " directory: " + string(entry.path().filename()));
+				         "Unexpected file found in " + string(folder)
+				             + " directory: " + string(entry.path().filename()));
 			}
 		}
 	}

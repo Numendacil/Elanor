@@ -1,11 +1,10 @@
 #include "Common.hpp"
 
-#include <random>
 #include <fstream>
+#include <random>
 #include <string>
 
 #include <Core/Utils/Logger.hpp>
-#include "libmirai/Utils/Logger.hpp"
 
 using json = nlohmann::json;
 
@@ -18,7 +17,7 @@ std::mt19937& GetRngEngine()
 	return rng;
 }
 
-bool BotConfig::FromFile(const std::string &filepath)
+bool BotConfig::FromFile(const std::string& filepath)
 {
 	std::ifstream ifile(filepath);
 	if (ifile.fail())

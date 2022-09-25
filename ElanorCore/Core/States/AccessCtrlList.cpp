@@ -1,7 +1,8 @@
 #include "AccessCtrlList.hpp"
 
 #include <nlohmann/json.hpp>
-#include "libmirai/Types/BasicTypes.hpp"
+
+#include <libmirai/Types/BasicTypes.hpp>
 
 using json = nlohmann::json;
 

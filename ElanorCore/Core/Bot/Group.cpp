@@ -6,9 +6,10 @@
 #include <fstream>
 #include <memory>
 
+#include <nlohmann/json.hpp>
+
 #include <Core/States/States.hpp>
 #include <Core/Utils/Logger.hpp>
-#include <nlohmann/json.hpp>
 
 
 using json = nlohmann::json;
@@ -41,10 +42,7 @@ std::unordered_map<string, std::unique_ptr<State::StateBase>> RegisterStates()
 } // namespace
 
 
-Group::Group(Mirai::GID_t group_id)
-	: gid(group_id), _states(RegisterStates())
-{
-}
+Group::Group(Mirai::GID_t group_id) : gid(group_id), _states(RegisterStates()) {}
 
 void Group::ToFile(const std::filesystem::path& filepath) const
 {
@@ -61,7 +59,8 @@ void Group::ToFile(const std::filesystem::path& filepath) const
 	}
 	catch (const std::exception& e)
 	{
-		LOG_WARN(Utils::GetLogger(), "Failed to create directory " + string(filepath.parent_path()) + ": " + std::string(e.what()));
+		LOG_WARN(Utils::GetLogger(),
+		         "Failed to create directory " + string(filepath.parent_path()) + ": " + std::string(e.what()));
 		return;
 	}
 

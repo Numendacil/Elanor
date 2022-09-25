@@ -1,8 +1,8 @@
 #ifndef _ELANOR_CORE_TRIGGER_INTERFACE_HPP_
 #define _ELANOR_CORE_TRIGGER_INTERFACE_HPP_
 
-#include <string>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 namespace Bot
@@ -11,7 +11,7 @@ namespace Bot
 class GroupList;
 class Client;
 
-}
+} // namespace Bot
 
 namespace Utils
 {
@@ -39,6 +39,6 @@ public:
 	virtual ~ITrigger() = default;
 };
 
-}
+} // namespace Trigger
 
 #endif

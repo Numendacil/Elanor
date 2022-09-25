@@ -1,11 +1,11 @@
 #ifndef _ELANOR_CORE_TRIGGER_STATUS_HPP_
 #define _ELANOR_CORE_TRIGGER_STATUS_HPP_
 
+#include <cassert>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <cassert>
 
 #include "StateBase.hpp"
 

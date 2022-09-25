@@ -9,11 +9,11 @@
 #endif
 
 #if defined(_WIN32)
-	#if defined(MIRAI_BUILD_DLL)
-		#define EXPORTED __declspec(dllexport)
-	#else
-		#define EXPORTED
-	#endif
+#if defined(MIRAI_BUILD_DLL)
+#define EXPORTED __declspec(dllexport)
+#else
+#define EXPORTED
+#endif
 #endif
 
 #ifndef EXPORTED
@@ -29,14 +29,14 @@ extern "C"
 		const char* (*GetPluginName)();
 		const char* (*GetPluginInfo)();
 
-		int (*GetGroupCommandCount)();
-		const char* (*GetGroupCommandName)(int);
-		GroupCommand::IGroupCommand* (*GetGroupCommand)(int);
+		size_t (*GetGroupCommandCount)();
+		const char* (*GetGroupCommandName)(size_t);
+		GroupCommand::IGroupCommand* (*GetGroupCommand)(size_t);
 		void (*DeleteGroupCommand)(GroupCommand::IGroupCommand*);
 
-		int (*GetTriggerCount)();
-		const char* (*GetTriggerName)(int);
-		Trigger::ITrigger* (*GetTrigger)(int);
+		size_t (*GetTriggerCount)();
+		const char* (*GetTriggerName)(size_t);
+		Trigger::ITrigger* (*GetTrigger)(size_t);
 		void (*DeleteTrigger)(Trigger::ITrigger*);
 
 		void (*ClosePlugin)();
@@ -49,35 +49,23 @@ extern "C"
 	const char* GetPluginName();
 	const char* GetPluginInfo();
 
-	int GetGroupCommandCount();
-	const char* GetGroupCommandName(int idx);
-	GroupCommand::IGroupCommand* GetGroupCommand(int idx);
+	size_t GetGroupCommandCount();
+	const char* GetGroupCommandName(size_t idx);
+	GroupCommand::IGroupCommand* GetGroupCommand(size_t idx);
 	void DeleteGroupCommand(GroupCommand::IGroupCommand* cmd);
 
-	int GetTriggerCount();
-	const char* GetTriggerName(int idx);
-	Trigger::ITrigger* GetTrigger(int idx);
+	size_t GetTriggerCount();
+	const char* GetTriggerName(size_t idx);
+	Trigger::ITrigger* GetTrigger(size_t idx);
 	void DeleteTrigger(Trigger::ITrigger* trigger);
 
 	void ClosePlugin();
 
 	extern "C" EXPORTED const API ApiTable{
-		InitPlugin, 
-		GetPluginName,
-		GetPluginInfo,
-		GetGroupCommandCount,
-		GetGroupCommandName,
-		GetGroupCommand,
-		DeleteGroupCommand,
-		GetTriggerCount,
-		GetTriggerName,
-		GetTrigger,
-		DeleteTrigger,
-		ClosePlugin
-	};
+		InitPlugin,         GetPluginName,   GetPluginInfo,  GetGroupCommandCount, GetGroupCommandName, GetGroupCommand,
+		DeleteGroupCommand, GetTriggerCount, GetTriggerName, GetTrigger,           DeleteTrigger,       ClosePlugin};
 
 #endif
-
 }
 
 #endif
