@@ -84,7 +84,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				             + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid,
 				                        Mirai::MessageChain().Plain(string(round_str) + "是什么数字捏，不认识捏"));
-				return false;
+				return true;
 			}
 			if (result.ec == std::errc::result_out_of_range)
 			{
@@ -92,7 +92,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				         "数字溢出 <RollDice>: round = " + string(round_str)
 				             + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("数字太、太大了"));
-				return false;
+				return true;
 			}
 			if (round < 1)
 			{
@@ -100,7 +100,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				         "投掷次数错误 <RollDice>: round = " + std::to_string(round)
 				             + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("骰子不见了捏，怎么会事捏"));
-				return false;
+				return true;
 			}
 			if (round > MAX_ROUND)
 			{
@@ -108,7 +108,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				         "投掷次数错误 <RollDice>: round = " + std::to_string(round)
 				             + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("骰子太多啦！"));
-				return false;
+				return true;
 			}
 		}
 
@@ -122,7 +122,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				             + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid,
 				                        Mirai::MessageChain().Plain(string(bound_str) + "是什么数字捏，不认识捏"));
-				return false;
+				return true;
 			}
 			if (result.ec == std::errc::result_out_of_range)
 			{
@@ -130,7 +130,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				         "数字溢出 <RollDice>: bound = " + string(bound_str)
 				             + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("数字太、太大了"));
-				return false;
+				return true;
 			}
 			if (bound < 1)
 			{
@@ -138,7 +138,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				         "骰子面数过小 <RollDice>: bound = " + std::to_string(bound)
 				             + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("这是什么奇妙骰子捏，没见过捏"));
-				return false;
+				return true;
 			}
 		}
 	}

@@ -1,23 +1,10 @@
 #include <Utils/TypeList.hpp>
 
-#include "GroupCommand/Answer.hpp"
-#include "GroupCommand/AtBot.hpp"
-#include "GroupCommand/Recall.hpp"
-#include "GroupCommand/Repeat.hpp"
-#include "GroupCommand/RollDice.hpp"
-#include "Trigger/MorningTrigger.hpp"
-
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>
 
-using GroupCommandList = Utils::TypeList< 
-	GroupCommand::Answer,
-	GroupCommand::AtBot,
-	GroupCommand::Recall,
-	GroupCommand::Repeat,
-	GroupCommand::RollDice
->;
-using TriggerList = Utils::TypeList< Trigger::MorningTrigger >;
+using GroupCommandList = Utils::TypeList<>;
+using TriggerList = Utils::TypeList<>;
 
 extern "C"
 {
@@ -27,12 +14,12 @@ extern "C"
 
 	const char* GetPluginName()
 	{
-		return "CommonPlugin";
+		return "AdminPlugin";
 	}
 
 	const char* GetPluginInfo()
 	{
-		return "Plugin for basic functions";
+		return "Plugin for administrative functions";
 	}
 
 

@@ -23,6 +23,13 @@ constexpr std::string_view trim(std::string_view str, std::string_view whitespac
 std::string ReplaceMark(std::string str);
 std::string toLower(std::string str);
 
+class UnknownInput : public std::runtime_error
+{
+public:
+	explicit UnknownInput(const std::string& input)
+	: std::runtime_error("Unknown input: " + input) {}
+};
+
 // Lowercase input only
 constexpr bool toBool(std::string_view str)
 {
@@ -34,7 +41,7 @@ constexpr bool toBool(std::string_view str)
 		if (str == std::string_view(TrueStr.at(i))) return true;
 		if (str == std::string_view(FalseStr.at(i))) return false;
 	}
-	throw std::runtime_error("Unknown boolean string: " + std::string(str));
+	throw UnknownInput(std::string(str));
 }
 
 size_t Tokenize(const std::string& input, std::vector<std::string>& tokens, size_t max_count = 0);
