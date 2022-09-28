@@ -4,8 +4,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include <Utils/Common.hpp>
-#include <Utils/StringUtils.hpp>
+#include <PluginUtils/Common.hpp>
+#include <PluginUtils/StringUtils.hpp>
 
 #include <libmirai/mirai.hpp>
 
@@ -128,6 +128,7 @@ bool BlackList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain(tokens[i] + "是个锤子QQ号"));
 				return true;
 			}
+			arr.emplace_back(id);
 		}
 		for (const auto& p : AtMsg)
 			arr.push_back(p.GetTarget());
@@ -146,8 +147,10 @@ bool BlackList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 
 		if (command == "add")
 		{
+			auto botid = client->GetBotQQ();
 			for (const auto& id : arr)
-				access_list->BlackListAdd(id);
+				if (id != botid)
+					access_list->BlackListAdd(id);
 			LOG_INFO(Utils::GetLogger(), "添加成功 <BlackList>" + Utils::GetDescription(gm.GetSender(), false));
 			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("黑名单更新好了捏"));
 			return true;

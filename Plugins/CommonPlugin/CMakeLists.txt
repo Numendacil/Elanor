@@ -6,5 +6,8 @@ target_sources(
 	PluginMain.cpp
 )
 
+
+target_include_directories(CommonPlugin PRIVATE .)
+
 add_subdirectory(GroupCommand)
 add_subdirectory(Trigger)

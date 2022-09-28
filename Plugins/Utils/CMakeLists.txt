@@ -1,10 +1,12 @@
 target_sources(
 	PluginProperties INTERFACE 
 	
-	Common.hpp
-	Common.cpp
-	StringUtils.hpp
-	StringUtils.cpp
+	PluginUtils/Common.hpp
+	PluginUtils/Common.cpp
+	PluginUtils/StringUtils.hpp
+	PluginUtils/StringUtils.cpp
 
-	TypeList.hpp
+	PluginUtils/TypeList.hpp
 )
+
+target_include_directories(PluginProperties INTERFACE .)

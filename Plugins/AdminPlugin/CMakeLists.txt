@@ -6,4 +6,6 @@ target_sources(
 	PluginMain.cpp
 )
 
+target_include_directories(AdminPlugin PRIVATE .)
+
 add_subdirectory(GroupCommand)

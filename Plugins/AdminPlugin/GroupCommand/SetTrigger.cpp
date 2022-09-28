@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 
-#include <Utils/Common.hpp>
-#include <Utils/StringUtils.hpp>
+#include <PluginUtils/Common.hpp>
+#include <PluginUtils/StringUtils.hpp>
 
 #include <libmirai/Messages/MessageChain.hpp>
 

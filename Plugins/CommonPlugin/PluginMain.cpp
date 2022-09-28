@@ -1,11 +1,11 @@
-#include <Utils/TypeList.hpp>
+#include <PluginUtils/TypeList.hpp>
 
-#include "GroupCommand/Answer.hpp"
-#include "GroupCommand/AtBot.hpp"
-#include "GroupCommand/Recall.hpp"
-#include "GroupCommand/Repeat.hpp"
-#include "GroupCommand/RollDice.hpp"
-#include "Trigger/MorningTrigger.hpp"
+#include <GroupCommand/Answer.hpp>
+#include <GroupCommand/AtBot.hpp>
+#include <GroupCommand/Recall.hpp>
+#include <GroupCommand/Repeat.hpp>
+#include <GroupCommand/RollDice.hpp>
+#include <Trigger/MorningTrigger.hpp>
 
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>

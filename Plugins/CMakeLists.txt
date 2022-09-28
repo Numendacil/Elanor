@@ -9,7 +9,6 @@ add_subdirectory(external)
 
 target_link_libraries(PluginProperties INTERFACE ElanorPlugins::External)
 target_link_libraries(PluginProperties INTERFACE ${CMAKE_PROJECT_NAME}::ElanorCore)
-target_include_directories(PluginProperties INTERFACE .)
 
 function(add_plugin plugin_name)
 	add_library(${plugin_name} SHARED)

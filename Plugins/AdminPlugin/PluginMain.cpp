@@ -1,9 +1,21 @@
-#include <Utils/TypeList.hpp>
+#include <PluginUtils/TypeList.hpp>
+
+#include <GroupCommand/BlackList.hpp>
+#include <GroupCommand/CommandAuth.hpp>
+#include <GroupCommand/SetTrigger.hpp>
+#include <GroupCommand/WhiteList.hpp>
+
+
 
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>
 
-using GroupCommandList = Utils::TypeList<>;
+using GroupCommandList = Utils::TypeList<
+	GroupCommand::BlackList,
+	GroupCommand::CommandAuth,
+	GroupCommand::SetTrigger,
+	GroupCommand::WhiteList
+>;
 using TriggerList = Utils::TypeList<>;
 
 extern "C"
