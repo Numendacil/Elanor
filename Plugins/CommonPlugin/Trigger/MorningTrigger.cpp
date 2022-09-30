@@ -23,7 +23,7 @@ void MorningTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils::
 	for (const auto& p : group_list)
 	{
 		auto enabled = p->GetState<State::TriggerStatus>();
-		if (enabled->GetTriggerStatus("Morning"))
+		if (enabled->GetTriggerStatus(std::string(MorningTrigger::_NAME_)))
 		{
 			auto GroupInfo = client->GetGroupConfig(p->gid);
 			LOG_INFO(Utils::GetLogger(),
