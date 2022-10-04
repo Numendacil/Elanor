@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <thread>
 
-#include <libmirai/Api/Client.hpp>
+#include <libmirai/Client.hpp>
 
 #include <Core/Utils/Logger.hpp>
 

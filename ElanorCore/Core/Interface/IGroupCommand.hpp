@@ -25,11 +25,11 @@ class BotConfig;
 namespace GroupCommand
 {
 
-static constexpr int GROUP_COMMAND_DEFAULT_PRIORITY = 10;
-static constexpr int GROUP_COMMAND_DEFAULT_PERMISSION = 0;
-
 class IGroupCommand
 {
+	static constexpr int GROUP_COMMAND_DEFAULT_PERMISSION = 0;
+	static constexpr int GROUP_COMMAND_DEFAULT_PRIORITY = 10;
+
 public:
 	virtual int Permission() const { return GROUP_COMMAND_DEFAULT_PERMISSION; }
 	virtual int Priority() const { return GROUP_COMMAND_DEFAULT_PRIORITY; }

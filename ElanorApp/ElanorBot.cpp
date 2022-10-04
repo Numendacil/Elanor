@@ -15,6 +15,7 @@
 
 #include <libmirai/Types/BasicTypes.hpp>
 #include <libmirai/mirai.hpp>
+#include <libmirai/Client.hpp>
 
 #include <Core/Interface/IGroupCommand.hpp>
 #include <Core/Interface/ITrigger.hpp>
@@ -150,6 +151,7 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 		std::vector<std::pair<std::string, bool>> trigger_list;
 		for (const auto& p : this->_triggers)
 			trigger_list.emplace_back(p.name, p.data->isDefaultOn());
+		this->_groups.SetTriggers(std::move(trigger_list));
 
 		this->_groups.LoadGroups(this->_config.Get<std::string>("/BotFolder", "./Bots"));
 	}
@@ -161,7 +163,6 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 			for (const auto& p : groups)
 			{
 				p->ToFile(this->_config.Get<std::filesystem::path>("/BotFolder", "./Bots") / p->gid.to_string());
-				std::this_thread::sleep_for(1s);
 			}
 		},
 		1h);
@@ -243,6 +244,12 @@ void ElanorBot::Stop()
 	{
 		std::lock_guard<std::mutex> lk(this->_MemberMtx);
 		this->_OffloadPlugins();
+	}
+	
+	auto groups = this->_groups.GetAllGroups();
+	for (const auto& p : groups)
+	{
+		p->ToFile(this->_config.Get<std::filesystem::path>("/BotFolder", "./Bots") / p->gid.to_string());
 	}
 }
 

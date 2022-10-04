@@ -1,6 +1,6 @@
 [submodule "ElanorCore/Core/Client/cpp-mirai-client"]
 	path = ElanorCore/Core/Client/cpp-mirai-client
-	url = git@github.com:numendacil/cpp-mirai-client.git
+	url = git@github.com:Numendacil/cpp-mirai-client.git
 [submodule "Plugins/external/stduuid"]
 	path = Plugins/external/stduuid
 	url = git@github.com:mariusbancila/stduuid.git
@@ -10,3 +10,6 @@
 [submodule "Plugins/external/croncpp"]
 	path = Plugins/external/croncpp
 	url = git@github.com:mariusbancila/croncpp.git
+[submodule "googletest"]
+	path = googletest
+	url = git@github.com:google/googletest

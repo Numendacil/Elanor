@@ -5,6 +5,7 @@
 #include <PluginUtils/StringUtils.hpp>
 
 #include <libmirai/mirai.hpp>
+#include <libmirai/Client.hpp>
 
 #include <Core/Bot/Group.hpp>
 #include <Core/Client/Client.hpp>

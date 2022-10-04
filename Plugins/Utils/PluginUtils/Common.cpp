@@ -12,6 +12,7 @@
 
 #include <libmirai/Types/BasicTypes.hpp>
 #include <libmirai/mirai.hpp>
+#include <libmirai/Client.hpp>
 
 #include <Core/Bot/Group.hpp>
 #include <Core/States/AccessCtrlList.hpp>
