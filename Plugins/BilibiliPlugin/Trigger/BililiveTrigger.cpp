@@ -6,9 +6,12 @@
 #include <set>
 
 #include <PluginUtils/Common.hpp>
+#include <PluginUtils/NetworkUtils.hpp>
+#include <State/BililiveList.hpp>
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 
+#include <libmirai/Client.hpp>
 #include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>
@@ -18,18 +21,31 @@
 #include <Core/States/TriggerStatus.hpp>
 #include <Core/Utils/Logger.hpp>
 
-#include <State/BililiveList.hpp>
-
 using json = nlohmann::json;
 using std::string;
 
 namespace Trigger
 {
 
+namespace
+{
+
+void SetClientOptions(httplib::Client& cli)
+{
+	cli.set_compress(true);
+	cli.set_decompress(true);
+	cli.set_connection_timeout(300); // NOLINT(*-avoid-magic-numbers)
+	cli.set_read_timeout(300);       // NOLINT(*-avoid-magic-numbers)
+	cli.set_write_timeout(120);      // NOLINT(*-avoid-magic-numbers)
+	cli.set_keep_alive(true);
+}
+
+} // namespace
+
 void BililiveTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils::BotConfig& config)
 {
 	std::map<uint64_t, std::pair<uint64_t, std::set<Mirai::GID_t>>> id_list; // room_id -> (uid, groups)
-	std::map<Mirai::GID_t, State::BililiveList> state_list;                         // group -> LiveList
+	std::map<Mirai::GID_t, State::BililiveList> state_list;                  // group -> LiveList
 	auto group_list = groups.GetAllGroups();
 
 	for (const auto& p : group_list)
@@ -38,7 +54,8 @@ void BililiveTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils:
 		if (enabled->GetTriggerStatus(string(BililiveTrigger::_NAME_)))
 		{
 			auto state = p->GetState<State::CustomState>();
-			auto bililist = state->GetState(string(State::BililiveList::_NAME_), State::BililiveList{}).get<State::BililiveList>();
+			auto bililist =
+				state->GetState(string(State::BililiveList::_NAME_), State::BililiveList{}).get<State::BililiveList>();
 			state_list.emplace(p->gid, bililist);
 			for (const auto& user : bililist.user_list)
 			{
@@ -49,7 +66,7 @@ void BililiveTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils:
 	}
 
 	httplib::Client cli("https://api.live.bilibili.com");
-	Utils::SetClientOptions(cli);
+	SetClientOptions(cli);
 
 	// For each room
 	for (const auto& p : id_list)
@@ -63,9 +80,17 @@ void BililiveTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils:
 			"/room/v1/Room/get_info", {{"id", std::to_string(room_id)}},
 			{{"Accept-Encoding", "gzip"},
 		     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
-		if (!Utils::CheckHttpResponse(result, "BililiveTrigger: room_info")) continue;
+		if (!Utils::VerifyResponse(result))
+		{
+			LOG_WARN(Utils::GetLogger(),
+			         "Request failed /room/v1/Room/get_info <BililiveTrigger>: "
+			             + (result ? httplib::to_string(result.error())
+			                       : ("Reason: " + result->reason + ", Body: " + result->body)));
+			continue;
+		}
 
 		json content = json::parse(result->body);
+
 		if (content["code"].get<int>() != 0)
 		{
 			LOG_WARN(Utils::GetLogger(),
@@ -96,7 +121,14 @@ void BililiveTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils:
 				"/live_user/v1/Master/info", {{"uid", std::to_string(uid)}},
 				{{"Accept-Encoding", "gzip"},
 			     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
-			if (!Utils::CheckHttpResponse(result, "BililiveTrigger: user_info")) continue;
+			if (!Utils::VerifyResponse(result))
+			{
+				LOG_WARN(Utils::GetLogger(),
+				         "Request failed /live_user/v1/Master/info <BililiveTrigger>: "
+				             + (result ? httplib::to_string(result.error())
+				                       : ("Reason: " + result->reason + ", Body: " + result->body)));
+				continue;
+			}
 
 			content = json::parse(result->body);
 			if (content["code"].get<int>() != 0)

@@ -15,6 +15,6 @@ public:
 	             Utils::BotConfig& config) override;
 };
 
-}
+} // namespace GroupCommand
 
 #endif

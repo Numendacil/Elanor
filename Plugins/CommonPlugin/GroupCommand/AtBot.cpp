@@ -7,8 +7,8 @@
 #include <PluginUtils/Common.hpp>
 #include <PluginUtils/StringUtils.hpp>
 
-#include <libmirai/mirai.hpp>
 #include <libmirai/Client.hpp>
+#include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>
 #include <Core/Client/Client.hpp>
@@ -43,7 +43,7 @@ bool AtBot::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::
 	constexpr std::array words = {"干嘛", "？"};
 	constexpr size_t words_count = words.size();
 
-	const std::filesystem::path filepath = config.Get<string>("/MediaFiles", "media_files/") + "images/at";
+	const std::filesystem::path filepath = config.Get("/path/MediaFiles", "media_files/") / std::filesystem::path("images/at");
 	vector<string> image;
 	for (const auto& entry : std::filesystem::directory_iterator(filepath))
 	{

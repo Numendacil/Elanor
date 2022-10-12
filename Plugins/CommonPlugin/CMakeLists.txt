@@ -9,5 +9,7 @@ target_sources(
 
 target_include_directories(CommonPlugin PRIVATE .)
 
+target_link_libraries(CommonPlugin PRIVATE croncpp::croncpp)
+
 add_subdirectory(GroupCommand)
 add_subdirectory(Trigger)

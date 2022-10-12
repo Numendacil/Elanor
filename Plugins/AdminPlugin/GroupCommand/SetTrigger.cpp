@@ -1,3 +1,5 @@
+#include "SetTrigger.hpp"
+
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -12,8 +14,6 @@
 #include <Core/States/TriggerStatus.hpp>
 #include <Core/Utils/Common.hpp>
 #include <Core/Utils/Logger.hpp>
-
-#include "SetTrigger.hpp"
 
 using std::string;
 using std::vector;
@@ -37,11 +37,10 @@ namespace GroupCommand
 // }
 
 bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client,
-                    	 Utils::BotConfig& config) 
+                         Utils::BotConfig& config)
 {
 	string str = Utils::ReplaceMark(Utils::GetText(gm.GetMessage()));
-	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') 
-		return false;
+	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') return false;
 
 	vector<string> tokens;
 	if (Utils::Tokenize(str, tokens) < 2) return false;
@@ -50,15 +49,17 @@ bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, 
 	if (command != "#trig" && command != "#trigger" && command != "#触发器") return false;
 
 
-
 	LOG_INFO(Utils::GetLogger(), "Calling SetTrigger <SetTrigger>" + Utils::GetDescription(gm.GetSender()));
-	
+
 	command = Utils::toLower(tokens[1]);
 
 	if (command == "help" || command == "h" || command == "帮助")
 	{
 		LOG_INFO(Utils::GetLogger(), "帮助文档 <SetTrigger>" + Utils::GetDescription(gm.GetSender(), false));
-		client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("usage:\n#trigger set [trigger] {on/off}\n#trigger status [trigger]\n#trigger list"));
+		client.SendGroupMessage(
+			gm.GetSender().group.id,
+			Mirai::MessageChain().Plain(
+				"usage:\n#trigger set [trigger] {on/off}\n#trigger status [trigger]\n#trigger list"));
 		return true;
 	}
 
@@ -72,7 +73,7 @@ bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, 
 			string message = "触发器列表";
 			for (const auto& s : list)
 			{
-				message += "\n" + s + ": " + ((trigger_status->GetTriggerStatus(s))? "✅" : "❌");
+				message += "\n" + s + ": " + ((trigger_status->GetTriggerStatus(s)) ? "✅" : "❌");
 			}
 			LOG_INFO(Utils::GetLogger(), "输出触发器列表 <SetTrigger>" + Utils::GetDescription(gm.GetSender(), false));
 			client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain(message));
@@ -81,30 +82,43 @@ bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, 
 
 		if (tokens.size() < 3)
 		{
-			LOG_INFO(Utils::GetLogger(), "缺少参数[trigger] <SetTrigger>: " + tokens[1] + Utils::GetDescription(gm.GetSender(), false));
-			client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("缺少参数[trigger]，是被你吃了嘛"));
+			LOG_INFO(Utils::GetLogger(),
+			         "缺少参数[trigger] <SetTrigger>: " + tokens[1] + Utils::GetDescription(gm.GetSender(), false));
+			client.SendGroupMessage(gm.GetSender().group.id,
+			                        Mirai::MessageChain().Plain("缺少参数[trigger]，是被你吃了嘛"));
 			return true;
 		}
 
 		string target = tokens[2];
 		if (!trigger_status->ExistTrigger(target))
 		{
-			LOG_INFO(Utils::GetLogger(), "无效参数[trigger] <SetTrigger>: " + target + Utils::GetDescription(gm.GetSender(), false));
-			client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain(target + "是哪个触发器捏，不知道捏"));
+			LOG_INFO(Utils::GetLogger(),
+			         "无效参数[trigger] <SetTrigger>: " + target + Utils::GetDescription(gm.GetSender(), false));
+			client.SendGroupMessage(gm.GetSender().group.id,
+			                        Mirai::MessageChain().Plain(target + "是哪个触发器捏，不知道捏"));
 			return true;
 		}
 
 		if (command == "status")
 		{
-			LOG_INFO(Utils::GetLogger(), "输出触发器状态 <SetTrigger>: " + target + string((trigger_status->GetTriggerStatus(target))? "✅" : "❌") + Utils::GetDescription(gm.GetSender(), false));
-			client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain(target + " 当前状态: " + string((trigger_status->GetTriggerStatus(target))? "✅" : "❌")));
+			LOG_INFO(Utils::GetLogger(),
+			         "输出触发器状态 <SetTrigger>: " + target
+			             + string((trigger_status->GetTriggerStatus(target)) ? "✅" : "❌")
+			             + Utils::GetDescription(gm.GetSender(), false));
+			client.SendGroupMessage(
+				gm.GetSender().group.id,
+				Mirai::MessageChain().Plain(
+					target + " 当前状态: " + string((trigger_status->GetTriggerStatus(target)) ? "✅" : "❌")));
 			return true;
 		}
 
 		if (tokens.size() < 4)
 		{
-			LOG_INFO(Utils::GetLogger(), "缺少参数{on/off} <SetTrigger>: " + tokens[1] + Utils::GetDescription(gm.GetSender(), false));
-			client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("on还是off, 到底要选哪个呢🔉到底要选哪个呢🔉到底要选哪个呢🔉"));
+			LOG_INFO(Utils::GetLogger(),
+			         "缺少参数{on/off} <SetTrigger>: " + tokens[1] + Utils::GetDescription(gm.GetSender(), false));
+			client.SendGroupMessage(
+				gm.GetSender().group.id,
+				Mirai::MessageChain().Plain("on还是off, 到底要选哪个呢🔉到底要选哪个呢🔉到底要选哪个呢🔉"));
 			return true;
 		}
 
@@ -114,22 +128,28 @@ bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, 
 			if (Utils::toBool(status))
 			{
 				trigger_status->UpdateTriggerStatus(target, true);
-				LOG_INFO(Utils::GetLogger(), "Trigger on ✅ <SetTrigger>: " + target + Utils::GetDescription(gm.GetSender(), false));
-				client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("已启动 " + target + " ✅"));
+				LOG_INFO(Utils::GetLogger(),
+				         "Trigger on ✅ <SetTrigger>: " + target + Utils::GetDescription(gm.GetSender(), false));
+				client.SendGroupMessage(gm.GetSender().group.id,
+				                        Mirai::MessageChain().Plain("已启动 " + target + " ✅"));
 				return true;
 			}
 			else
 			{
 				trigger_status->UpdateTriggerStatus(target, false);
-				LOG_INFO(Utils::GetLogger(), "Trigger off ❌ <SetTrigger>: " + target + Utils::GetDescription(gm.GetSender(), false));
-				client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain("已关闭 " + target + " ❌"));
+				LOG_INFO(Utils::GetLogger(),
+				         "Trigger off ❌ <SetTrigger>: " + target + Utils::GetDescription(gm.GetSender(), false));
+				client.SendGroupMessage(gm.GetSender().group.id,
+				                        Mirai::MessageChain().Plain("已关闭 " + target + " ❌"));
 				return true;
 			}
 		}
-		catch(const Utils::UnknownInput&)
+		catch (const Utils::UnknownInput&)
 		{
-			LOG_INFO(Utils::GetLogger(), "未知选项 <SetTrigger>: " + tokens[3] + Utils::GetDescription(gm.GetSender(), false));
-			client.SendGroupMessage(gm.GetSender().group.id, Mirai::MessageChain().Plain(tokens[3] + "是什么意思捏，看不懂捏"));
+			LOG_INFO(Utils::GetLogger(),
+			         "未知选项 <SetTrigger>: " + tokens[3] + Utils::GetDescription(gm.GetSender(), false));
+			client.SendGroupMessage(gm.GetSender().group.id,
+			                        Mirai::MessageChain().Plain(tokens[3] + "是什么意思捏，看不懂捏"));
 			return true;
 		}
 	}
@@ -140,4 +160,4 @@ bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, 
 	return true;
 }
 
-}
+} // namespace GroupCommand

@@ -1,21 +1,15 @@
-#include <PluginUtils/TypeList.hpp>
-
 #include <GroupCommand/BlackList.hpp>
 #include <GroupCommand/CommandAuth.hpp>
 #include <GroupCommand/SetTrigger.hpp>
 #include <GroupCommand/WhiteList.hpp>
-
+#include <PluginUtils/TypeList.hpp>
 
 
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>
 
-using GroupCommandList = Utils::TypeList<
-	GroupCommand::BlackList,
-	GroupCommand::CommandAuth,
-	GroupCommand::SetTrigger,
-	GroupCommand::WhiteList
->;
+using GroupCommandList = Utils::TypeList< GroupCommand::BlackList, GroupCommand::CommandAuth, GroupCommand::SetTrigger,
+                                          GroupCommand::WhiteList >;
 using TriggerList = Utils::TypeList<>;
 
 extern "C"
@@ -57,7 +51,7 @@ extern "C"
 		GroupCommand::IGroupCommand* command = nullptr;
 		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
 		{
-			(void)((idx == Is ? (command = new GroupCommandList::At_t<Is>, true) : false)|| ...); // NOLINT(cppcoreguidelines-owning-memory)
+			(void)((idx == Is ? (command = new GroupCommandList::At_t<Is>, true) : false) || ...); // NOLINT(cppcoreguidelines-owning-memory)
 		}
 		(std::make_integer_sequence<size_t, GroupCommandList::size>{});
 

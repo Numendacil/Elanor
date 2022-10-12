@@ -26,8 +26,7 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
                        Utils::BotConfig& config)
 {
 	string str = Utils::ReplaceMark(Utils::GetText(gm.GetMessage()));
-	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') 
-		return false;
+	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') return false;
 
 	vector<string> tokens;
 	if (Utils::Tokenize(str, tokens) < 1) return false;
@@ -148,10 +147,10 @@ bool RollDice::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 	string msg;
 	for (int i = 0; i < round; ++i)
 	{
-		result[i] = rngroll(Utils::GetRngEngine()); // NOLINT(*-bounds-constant-array-index)
-		ans += result[i];                           // NOLINT(*-bounds-constant-array-index)
-		msg += (i) ? " + " + std::to_string(result[i])	// NOLINT(*-bounds-constant-array-index)
-				   : std::to_string(result[i]); // NOLINT(*-bounds-constant-array-index)
+		result[i] = rngroll(Utils::GetRngEngine());    // NOLINT(*-bounds-constant-array-index)
+		ans += result[i];                              // NOLINT(*-bounds-constant-array-index)
+		msg += (i) ? " + " + std::to_string(result[i]) // NOLINT(*-bounds-constant-array-index)
+				   : std::to_string(result[i]);        // NOLINT(*-bounds-constant-array-index)
 	}
 	msg += " = ";
 	LOG_INFO(Utils::GetLogger(),
