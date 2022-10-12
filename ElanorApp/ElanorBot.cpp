@@ -13,7 +13,6 @@
 
 #include <Utils/PluginManager.hpp>
 
-#include <libmirai/Types/BasicTypes.hpp>
 #include <libmirai/mirai.hpp>
 #include <libmirai/Client.hpp>
 
@@ -139,7 +138,7 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 {
 	{
 		std::lock_guard<std::mutex> lk(this->_MemberMtx);
-		this->_LoadPlugins(this->_config.Get<std::string>("/PluginsFolder", "./Plugins"));
+		this->_LoadPlugins(this->_config.Get<std::string>("/path/PluginsFolder", "./Plugins"));
 
 		this->_groups.SetSuid(this->_config.Get<Mirai::QQ_t>("/suid", {}));
 
@@ -153,7 +152,7 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 			trigger_list.emplace_back(p.name, p.data->isDefaultOn());
 		this->_groups.SetTriggers(std::move(trigger_list));
 
-		this->_groups.LoadGroups(this->_config.Get<std::string>("/BotFolder", "./Bots"));
+		this->_groups.LoadGroups(this->_config.Get<std::string>("/path/BotFolder", "./Bots"));
 	}
 
 	this->_timer.LaunchLoop(
@@ -162,7 +161,7 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 			auto groups = this->_groups.GetAllGroups();
 			for (const auto& p : groups)
 			{
-				p->ToFile(this->_config.Get<std::filesystem::path>("/BotFolder", "./Bots") / p->gid.to_string());
+				p->ToFile(this->_config.Get<std::filesystem::path>("/path/BotFolder", "./Bots") / p->gid.to_string());
 			}
 		},
 		1h);
@@ -249,7 +248,7 @@ void ElanorBot::Stop()
 	auto groups = this->_groups.GetAllGroups();
 	for (const auto& p : groups)
 	{
-		p->ToFile(this->_config.Get<std::filesystem::path>("/BotFolder", "./Bots") / p->gid.to_string());
+		p->ToFile(this->_config.Get<std::filesystem::path>("/path/BotFolder", "./Bots") / p->gid.to_string());
 	}
 }
 
@@ -330,8 +329,21 @@ void ElanorBot::_GroupMessageEventHandler(Mirai::GroupMessageEvent& gm)
 		{
 			matched = (p.data)->Execute(gm, group, this->_client, this->_config);
 		}
+		catch (const Mirai::NetworkException& e)
+		{
+			LOG_WARN(Utils::GetLogger(), "Network error when connecting to mah: "s + e._message + " <" + std::to_string(e._code) + ">");
+		}
+		catch (const Mirai::ParseError& e)
+		{
+			LOG_WARN(Utils::GetLogger(), "Error parsing response from MAH: "s + e._error + " when parsing " + e._message);
+		}
+		catch (const Mirai::MiraiApiHttpException& e)
+		{
+			LOG_WARN(Utils::GetLogger(), "Error from MAH: "s + e._message + " <" + std::to_string(e._code) + ">");
+		}
 		catch (const std::exception& e)
 		{
+			// Unexpected exceptions
 			LOG_ERROR(Utils::GetLogger(), e.what());
 		}
 		if (matched) priority = (p.data)->Priority();
