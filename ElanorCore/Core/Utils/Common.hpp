@@ -43,19 +43,24 @@ public:
 
 	bool FromFile(const std::string& filepath);
 
-	template<typename T> T Get(const std::string& key, const T& value) const
+	template<typename ValueType, typename KeyType>
+	auto Get(KeyType&& key, ValueType&& value) const
 	{
+		using ReturnType = decltype(std::declval<typename nlohmann::json>().value(std::forward<KeyType>(key),
+		                                                                          std::forward<ValueType>(value)));
 		std::lock_guard<std::mutex> lk(this->_mtx);
 		auto jp = nlohmann::json::json_pointer(key);
-		if (this->_config.contains(jp)) return this->_config.at(jp).get<T>();
+		if (this->_config.contains(jp)) return this->_config.at(jp).template get<ReturnType>();
 		else
-			return value;
+			return (ReturnType)std::forward<ValueType>(value);
 	}
-	template<typename T> std::optional<T> Get(const std::string& key) const
+
+	template<typename ValueType, typename KeyType>
+	std::optional<ValueType> Get(KeyType&& key) const
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx);
 		auto jp = nlohmann::json::json_pointer(key);
-		if (this->_config.contains(jp)) return this->_config.at(jp).get<T>();
+		if (this->_config.contains(jp)) return this->_config.at(jp).get<ValueType>();
 		else
 			return std::nullopt;
 	}
