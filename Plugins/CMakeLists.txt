@@ -64,4 +64,11 @@ add_subdirectory(Utils)
 add_subdirectory(AdminPlugin)
 add_subdirectory(BilibiliPlugin)
 add_subdirectory(CommonPlugin)
+add_subdirectory(MemePlugin)
 add_subdirectory(PixivPlugin)
+
+install(
+	DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/pymodules"
+	DESTINATION "bin"
+	PATTERN "__pycache__" EXCLUDE
+)

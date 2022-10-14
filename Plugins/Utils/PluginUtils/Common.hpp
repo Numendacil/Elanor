@@ -1,10 +1,13 @@
 #ifndef _UTILS_COMMON_HPP_
 #define _UTILS_COMMON_HPP_
 
+#include <algorithm>
 #include <optional>
 #include <random>
 
 #include <nlohmann/json.hpp>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <libmirai/mirai.hpp>
 
@@ -21,6 +24,54 @@ class Group;
 
 namespace Utils
 {
+
+inline std::string exec(std::vector<std::string>& cmd, int& status)
+{
+	if (cmd.empty()) return {};
+
+	std::string result = "";
+	std::vector<char *> param(cmd.size() + 1);
+	std::transform(cmd.begin(), cmd.end(), param.begin(),
+		[](std::string& str) { return str.data(); });
+	param.back() = nullptr;
+
+	pid_t pid{};
+	int p[2];	// NOLINT(*-avoid-c-arrays)
+	if (pipe(p) == -1)
+	{
+		perror("Failed to open pipe");
+		return {};
+	}
+	if ((pid = fork()) == -1)
+	{
+		perror("Failed to fork program");
+		return {};
+	}
+	if (pid == 0)
+	{
+		dup2(p[1], STDOUT_FILENO);
+		close(p[0]);
+		close(p[1]);
+		execvp(param[0], param.data());
+		perror(("Failed to execute " + cmd[0]).c_str());
+		exit(1);
+	}
+	close(p[1]);
+
+	constexpr size_t BUFFER_SIZE = 1024;
+	char buffer[BUFFER_SIZE];	// NOLINT(*-avoid-c-arrays)
+	size_t c{};
+	while ((c = read(p[0], buffer, BUFFER_SIZE)) > 0)
+		result.append(buffer, c);
+	close(p[0]);
+
+	if (waitpid(pid, &status, 0) == -1)
+	{
+		return {};
+	}
+
+	return result;
+}
 
 inline bool CheckAuth(const Mirai::GroupMember& member, const Bot::Group& group, int permission)
 {
