@@ -7,6 +7,8 @@
 #include <mutex>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 #include <libmirai/Types/BasicTypes.hpp>
 
 #include "StateBase.hpp"
@@ -16,20 +18,13 @@ namespace State
 
 class Activity : public StateBase
 {
-public:
-	struct AnswerInfo
-	{
-		std::string answer;
-		Mirai::MessageId_t message_id;
-	};
-
 protected:
 	mutable std::mutex _mtx;
 	mutable std::condition_variable _cv;
 
 	bool _hasActivity = false;
 	std::string _ActivityName;
-	std::deque<AnswerInfo> _answers;
+	std::deque<nlohmann::json> _answers;
 
 public:
 	static constexpr std::string_view _NAME_ = "Activity";
@@ -62,10 +57,10 @@ public:
 
 	std::string GetActivityName() const;
 
-	bool WaitForAnswer(AnswerInfo& answer);
-	bool WaitForAnswerUntil(std::chrono::time_point<std::chrono::system_clock> due, AnswerInfo& answer);
+	bool WaitForAnswer(nlohmann::json& answer);
+	bool WaitForAnswerUntil(std::chrono::time_point<std::chrono::system_clock> due, nlohmann::json& answer);
 
-	void AddAnswer(const AnswerInfo& answer);
+	void AddAnswer(nlohmann::json answer);
 };
 
 } // namespace State

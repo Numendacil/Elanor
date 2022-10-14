@@ -2,9 +2,11 @@ cmake_minimum_required (VERSION 3.20)
 
 project (ElanorCore VERSION 1.0.0 LANGUAGES CXX)
 
+# Library names
 set(ELANORBOT_CORE ElanorCore)
 set(ELANORBOT_MOCKCORE ElanorCoreMock)
 
+# ELanorCore
 add_library(${ELANORBOT_CORE} SHARED)
 add_library(${CMAKE_PROJECT_NAME}::${ELANORBOT_CORE} ALIAS ${ELANORBOT_CORE})
 
@@ -27,21 +29,23 @@ target_link_libraries(${ELANORBOT_CORE} PUBLIC pthread)
 set_target_properties(${ELANORBOT_CORE} PROPERTIES INSTALL_RPATH "$\{ORIGIN\};${INSTALL_RPATH}")
 set_target_properties(${ELANORBOT_CORE} PROPERTIES PREFIX "")
 
+# For building shared libs
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(MIRAI_INSTALL ON CACHE BOOL "Install library" FORCE)
-
+# Mock libraries
 option(ELANOR_BUILD_MOCK_LIB "Build MockLibs" OFF)
 if(ELANOR_BUILD_MOCK_LIB)
 	message("Build ElanorCoreMock")
 	
-	add_library(${ELANORBOT_MOCKCORE} STATIC)
+	add_library(${ELANORBOT_MOCKCORE})
 	add_library(${CMAKE_PROJECT_NAME}::${ELANORBOT_MOCKCORE} ALIAS ${ELANORBOT_MOCKCORE})
 	target_compile_features(${ELANORBOT_MOCKCORE} PUBLIC cxx_std_20)
 	target_link_libraries(${ELANORBOT_MOCKCORE} PUBLIC pthread)
 	target_include_directories(${ELANORBOT_MOCKCORE} PUBLIC .)
 
 endif(ELANOR_BUILD_MOCK_LIB)
+
+set(MIRAI_INSTALL ON CACHE BOOL "Install library" FORCE)
 
 add_subdirectory(Core/Bot)
 add_subdirectory(Core/Client)
@@ -57,6 +61,12 @@ if(ELANOR_BUILD_MOCK_LIB)
 
 endif(ELANOR_BUILD_MOCK_LIB)
 
+# UnitTests
+if(ELANOR_BUILD_UNIT_TESTS)
+	add_subdirectory(UnitTest)
+endif(ELANOR_BUILD_UNIT_TESTS)
+
+# Installation
 install(
 	TARGETS ${ELANORBOT_CORE}
 	EXPORT ${ELANORBOT_CORE}-targets

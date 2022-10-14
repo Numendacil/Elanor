@@ -17,6 +17,11 @@ if(ELANOR_BUILD_UNIT_TESTS)
 	target_compile_options(GoogleTestLibs INTERFACE -fsanitize=address -fno-omit-frame-pointer)
 	target_link_options(GoogleTestLibs INTERFACE -fsanitize=address -fno-omit-frame-pointer)
 
+	set(ELANOR_BUILD_MOCK_LIB ON CACHE BOOL "Build MockLibs" FORCE)
+
+	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+	enable_testing()
+	include(GoogleTest)
 endif(ELANOR_BUILD_UNIT_TESTS)
 
 add_subdirectory(ElanorApp)

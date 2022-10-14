@@ -4,6 +4,8 @@
 #include <memory>
 #include <string>
 
+using json = nlohmann::json;
+
 namespace State
 {
 
@@ -28,7 +30,7 @@ std::string Activity::GetActivityName() const
 	return this->_ActivityName;
 }
 
-bool Activity::WaitForAnswer(Activity::AnswerInfo& answer)
+bool Activity::WaitForAnswer(json& answer)
 {
 	std::unique_lock<std::mutex> lk(this->_mtx);
 	this->_cv.wait(lk, [this] { return !this->_answers.empty() || !this->_hasActivity; });
@@ -38,7 +40,7 @@ bool Activity::WaitForAnswer(Activity::AnswerInfo& answer)
 	return true;
 }
 
-bool Activity::WaitForAnswerUntil(std::chrono::time_point<std::chrono::system_clock> due, Activity::AnswerInfo& answer)
+bool Activity::WaitForAnswerUntil(std::chrono::time_point<std::chrono::system_clock> due, json& answer)
 {
 	std::unique_lock<std::mutex> lk(this->_mtx);
 	if (!this->_cv.wait_until(lk, due, [this] { return !this->_answers.empty() || !this->_hasActivity; })) return false;
@@ -48,11 +50,11 @@ bool Activity::WaitForAnswerUntil(std::chrono::time_point<std::chrono::system_cl
 	return true;
 }
 
-void Activity::AddAnswer(const Activity::AnswerInfo& answer)
+void Activity::AddAnswer(json answer)
 {
 	std::lock_guard<std::mutex> lk(this->_mtx);
 	if (!this->_hasActivity) return;
-	this->_answers.push_back(answer);
+	this->_answers.emplace_back(std::move(answer));
 	this->_cv.notify_all();
 }
 
