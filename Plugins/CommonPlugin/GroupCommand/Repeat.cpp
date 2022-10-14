@@ -44,7 +44,7 @@ bool Repeat::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 {
 	auto msg = gm.GetMessage();
 	string str = msg.ToJson().dump();
-	if (str.empty() || str == "[]") return false;
+	if (str.empty() || str == "[]") return true;
 
 	group.GetState<State::CustomState>()->ModifyState(
 		"RepeatState",
@@ -78,7 +78,7 @@ bool Repeat::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 			state = repeat_state;
 		},
 		RepeatState{});
-	return false;
+	return true;
 }
 
 } // namespace GroupCommand

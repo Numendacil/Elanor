@@ -216,7 +216,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 
 			unsigned char* out = ImageUtils::CensorImage(image, sigma, len, cover);
 			msg += Mirai::ImageMessage({}, {}, {}, Utils::b64encode(out, len));
-			delete out;	// NOLINT(*-owning-memory)
+			VIPS_FREE(out);
 		}
 		
 		LOG_INFO(Utils::GetLogger(), "上传结果 <Pixiv Id>" + Utils::GetDescription(gm.GetSender(), false));
@@ -349,7 +349,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 					node.SetMessageChain(Mirai::MessageChain().Image("", "", "", Utils::b64encode(out, len)));
 				}
 				msg.emplace_back(node);
-				delete out;	// NOLINT(*-owning-memory)
+				VIPS_FREE(out);
 			}
 		}
 	

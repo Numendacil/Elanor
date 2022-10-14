@@ -43,7 +43,7 @@ bool AtBot::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::
 	constexpr std::array words = {"干嘛", "？"};
 	constexpr size_t words_count = words.size();
 
-	const std::filesystem::path filepath = config.Get("/path/MediaFiles", "media_files/") / std::filesystem::path("images/at");
+	const std::filesystem::path filepath = config.Get("/path/MediaFiles", std::filesystem::path("media_files")) / std::filesystem::path("images/at");
 	vector<string> image;
 	for (const auto& entry : std::filesystem::directory_iterator(filepath))
 	{

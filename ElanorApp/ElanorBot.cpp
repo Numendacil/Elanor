@@ -128,7 +128,10 @@ void ElanorBot::_OffloadPlugins()
 	for (auto&& p : this->_plugins)
 	{
 		API* ApiTable = static_cast<API*>(p.GetSym("ApiTable"));
-		ApiTable->ClosePlugin();
+		if (ApiTable)
+			ApiTable->ClosePlugin();
+		else
+			LOG_WARN(Utils::GetLogger(), "Failed to close plugin, the library may be overwritten.");
 		p.Close();
 	}
 	this->_plugins.clear();
@@ -138,9 +141,9 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 {
 	{
 		std::lock_guard<std::mutex> lk(this->_MemberMtx);
-		this->_LoadPlugins(this->_config.Get<std::string>("/path/PluginsFolder", "./Plugins"));
+		this->_LoadPlugins(this->_config.Get("/path/PluginsFolder", "Plugins"));
 
-		this->_groups.SetSuid(this->_config.Get<Mirai::QQ_t>("/suid", {}));
+		this->_groups.SetSuid(this->_config.Get("/suid", Mirai::QQ_t{}));
 
 		std::vector<std::pair<std::string, int>> command_list;
 		for (const auto& p : this->_GroupCommands)
@@ -152,7 +155,7 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 			trigger_list.emplace_back(p.name, p.data->isDefaultOn());
 		this->_groups.SetTriggers(std::move(trigger_list));
 
-		this->_groups.LoadGroups(this->_config.Get<std::string>("/path/BotFolder", "./Bots"));
+		this->_groups.LoadGroups(this->_config.Get("/path/BotFolder", std::filesystem::path("Bots")));
 	}
 
 	this->_timer.LaunchLoop(
@@ -161,7 +164,7 @@ void ElanorBot::Start(const Mirai::SessionConfigs& opts)
 			auto groups = this->_groups.GetAllGroups();
 			for (const auto& p : groups)
 			{
-				p->ToFile(this->_config.Get<std::filesystem::path>("/path/BotFolder", "./Bots") / p->gid.to_string());
+				p->ToFile(this->_config.Get("/path/BotFolder", std::filesystem::path("Bots")) / p->gid.to_string());
 			}
 		},
 		1h);
@@ -248,7 +251,7 @@ void ElanorBot::Stop()
 	auto groups = this->_groups.GetAllGroups();
 	for (const auto& p : groups)
 	{
-		p->ToFile(this->_config.Get<std::filesystem::path>("/path/BotFolder", "./Bots") / p->gid.to_string());
+		p->ToFile(this->_config.Get("/path/BotFolder", std::filesystem::path("Bots")) / p->gid.to_string());
 	}
 }
 
@@ -345,6 +348,7 @@ void ElanorBot::_GroupMessageEventHandler(Mirai::GroupMessageEvent& gm)
 		{
 			// Unexpected exceptions
 			LOG_ERROR(Utils::GetLogger(), e.what());
+			this->_client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("Error: " + string(e.what())));
 		}
 		if (matched) priority = (p.data)->Priority();
 	}

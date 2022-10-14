@@ -1,0 +1,19 @@
+{
+	"path":
+	{
+		"PluginsFolder": "Plugins",
+		"BotFolder": "Bots",
+		"MediaFiles": "media_files",
+		"pymodules": "pymodules"
+	},
+	"suid": 0,
+	"proxy":
+	{
+		"host": "",
+		"port": -1
+	},
+	"pixiv":
+	{
+		"token": ""
+	}
+}
