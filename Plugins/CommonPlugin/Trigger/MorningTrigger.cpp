@@ -1,12 +1,14 @@
 
 #include "MorningTrigger.hpp"
 
+#include <chrono>
 #include <ctime>
+#include <thread>
 
 #include <croncpp.h>
 
-#include <libmirai/mirai.hpp>
 #include <libmirai/Client.hpp>
+#include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>
 #include <Core/Bot/GroupList.hpp>
@@ -30,6 +32,9 @@ void MorningTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils::
 			LOG_INFO(Utils::GetLogger(),
 			         "Send morning <MorningTrigger>" + GroupInfo.name + "(" + p->gid.to_string() + ")");
 			client.SendGroupMessage(p->gid, Mirai::MessageChain().Plain("起床啦！"));
+
+			constexpr auto INTERVAL = std::chrono::seconds(5);
+			std::this_thread::sleep_for(INTERVAL);
 		}
 	}
 }

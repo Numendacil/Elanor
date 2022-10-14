@@ -5,7 +5,7 @@
 #include "ITrigger.hpp"
 
 #if defined(__linux__) || defined(__APPLE__)
-#define EXPORTED
+#define EXPORTED __attribute__((visibility("default")))
 #endif
 
 #if defined(_WIN32)

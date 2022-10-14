@@ -1,12 +1,12 @@
 target_sources(
 	PluginProperties INTERFACE 
 	
+	PluginUtils/Base64.hpp
 	PluginUtils/Common.hpp
-	PluginUtils/Common.cpp
+	PluginUtils/NetworkUtils.hpp
 	PluginUtils/StringUtils.hpp
-	PluginUtils/StringUtils.cpp
-
 	PluginUtils/TypeList.hpp
+	PluginUtils/UrlComponents.hpp
 )
 
 target_include_directories(PluginProperties INTERFACE .)

@@ -9,6 +9,8 @@ target_sources(
 
 target_include_directories(BilibiliPlugin PRIVATE .)
 
+target_link_libraries(BilibiliPlugin PRIVATE httplib::httplib)
+
 add_subdirectory(GroupCommand)
 add_subdirectory(State)
 add_subdirectory(Trigger)

@@ -31,4 +31,4 @@ void to_json(json& j, const BililiveList& p)
 	}
 }
 
-}
+} // namespace State

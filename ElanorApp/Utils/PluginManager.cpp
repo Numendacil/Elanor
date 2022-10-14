@@ -21,6 +21,15 @@ namespace
 #endif
 }
 
+[[nodiscard]] inline const char* get_error()
+{
+#ifdef _WIN32
+	return "";
+#else
+	return dlerror();
+#endif
+}
+
 inline void unload_dynamic_library(void* lib_handle)
 {
 #ifdef _WIN32
@@ -54,7 +63,7 @@ void PluginLibrary::Open(const std::string& libpath)
 {
 	if (this->handle != nullptr) this->Close();
 	this->handle = load_dynamic_library(libpath);
-	if (!this->handle) throw std::runtime_error("Failed to load library " + std::string(libpath));
+	if (!this->handle) throw std::runtime_error("Failed to load library " + std::string(libpath) + ": " + get_error());
 }
 
 void PluginLibrary::Close()

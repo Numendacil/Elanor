@@ -1,18 +1,18 @@
+#include "Recall.hpp"
+
 #include <string>
 #include <vector>
 
 #include <PluginUtils/Common.hpp>
 #include <PluginUtils/StringUtils.hpp>
 
-#include <libmirai/mirai.hpp>
 #include <libmirai/Client.hpp>
+#include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>
 #include <Core/Client/Client.hpp>
 #include <Core/Utils/Common.hpp>
 #include <Core/Utils/Logger.hpp>
-
-#include "Recall.hpp"
 
 using json = nlohmann::json;
 using std::string;
@@ -22,11 +22,10 @@ namespace GroupCommand
 {
 
 bool Recall::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client,
-                       Utils::BotConfig& config)
+                     Utils::BotConfig& config)
 {
 	string str = Utils::ReplaceMark(Utils::GetText(gm.GetMessage()));
-	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') 
-		return false;
+	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') return false;
 
 	vector<string> tokens;
 	if (Utils::Tokenize(str, tokens) < 1) return false;
@@ -43,7 +42,7 @@ bool Recall::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("权限不足捏～"));
 		return true;
 	}
-	
+
 	if (tokens.size() > 1)
 	{
 		string arg = Utils::toLower(tokens[1]);
@@ -54,7 +53,7 @@ bool Recall::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 			return true;
 		}
 	}
-	
+
 	auto quote = gm.GetMessage().GetAll<Mirai::QuoteMessage>();
 	if (quote.empty())
 	{
@@ -75,4 +74,4 @@ bool Recall::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 	return true;
 }
 
-}
+} // namespace GroupCommand

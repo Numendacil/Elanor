@@ -1,5 +1,5 @@
-#include <PluginUtils/TypeList.hpp>
 #include <GroupCommand/Bililive.hpp>
+#include <PluginUtils/TypeList.hpp>
 #include <Trigger/BililiveTrigger.hpp>
 
 
@@ -48,7 +48,9 @@ extern "C"
 		GroupCommand::IGroupCommand* command = nullptr;
 		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
 		{
-			(void)((idx == Is ? (command = new GroupCommandList::At_t<Is>, true) : false)|| ...); // NOLINT(cppcoreguidelines-owning-memory)
+			// NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+			(void)((idx == Is ? (command = new GroupCommandList::At_t<Is>, true) : false)
+			       || ...);
 		}
 		(std::make_integer_sequence<size_t, GroupCommandList::size>{});
 
@@ -83,7 +85,9 @@ extern "C"
 		Trigger::ITrigger* trigger = nullptr;
 		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
 		{
-			(void)((idx == Is ? (trigger = new TriggerList::At_t<Is>, true) : false) || ...); // NOLINT(cppcoreguidelines-owning-memory)
+			// NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+			(void)((idx == Is ? (trigger = new TriggerList::At_t<Is>, true) : false)
+			       || ...);
 		}
 		(std::make_integer_sequence<size_t, TriggerList::size>{});
 

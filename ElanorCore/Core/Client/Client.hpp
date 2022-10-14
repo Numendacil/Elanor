@@ -123,11 +123,11 @@ public:
 	// 	return std::invoke(std::forward<F>(f), this->_client, std::forward<Args>(args)...);
 	// }
 
-	std::future<Mirai::MessageId_t> SendGroupMessage(Mirai::GID_t, const Mirai::MessageChain&,
+	std::future<Mirai::MessageId_t> SendGroupMessage(Mirai::GID_t, Mirai::MessageChain,
 	                                                 std::optional<Mirai::MessageId_t> = std::nullopt);
-	std::future<Mirai::MessageId_t> SendFriendMessage(Mirai::QQ_t, const Mirai::MessageChain&,
+	std::future<Mirai::MessageId_t> SendFriendMessage(Mirai::QQ_t, Mirai::MessageChain,
 	                                                  std::optional<Mirai::MessageId_t> = std::nullopt);
-	std::future<Mirai::MessageId_t> SendTempMessage(Mirai::GID_t, Mirai::QQ_t, const Mirai::MessageChain&,
+	std::future<Mirai::MessageId_t> SendTempMessage(Mirai::GID_t, Mirai::QQ_t, Mirai::MessageChain,
 	                                                std::optional<Mirai::MessageId_t> = std::nullopt);
 };
 

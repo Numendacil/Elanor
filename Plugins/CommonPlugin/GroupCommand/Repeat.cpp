@@ -10,9 +10,9 @@
 
 #include <Core/Bot/Group.hpp>
 #include <Core/Client/Client.hpp>
+#include <Core/States/CustomState.hpp>
 #include <Core/Utils/Common.hpp>
 #include <Core/Utils/Logger.hpp>
-#include <Core/States/CustomState.hpp>
 
 using std::string;
 using std::vector;
@@ -40,44 +40,45 @@ void to_json(json& j, const RepeatState& p)
 }
 
 bool Repeat::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client,
-                	Utils::BotConfig& config)
+                     Utils::BotConfig& config)
 {
 	auto msg = gm.GetMessage();
 	string str = msg.ToJson().dump();
-	if (str.empty() || str == "[]")
-		return false;
+	if (str.empty() || str == "[]") return true;
 
-	group.GetState<State::CustomState>()->ModifyState("RepeatState", 
-	[&](json& state)
-	{
-		RepeatState repeat_state = state.get<RepeatState>();
-
-		if (str == repeat_state.LastMsg.ToJson().dump())
+	group.GetState<State::CustomState>()->ModifyState(
+		"RepeatState",
+		[&](json& state)
 		{
-			LOG_DEBUG(Utils::GetLogger(), "有人复读 <Repeat>: " + str + Utils::GetDescription(gm.GetSender()));
-			if (!repeat_state.isRepeated)
+			RepeatState repeat_state = state.get<RepeatState>();
+
+			if (str == repeat_state.LastMsg.ToJson().dump())
 			{
-				constexpr int REPEAT_PROB = 10;
-				std::uniform_int_distribution rng_repeat(1, REPEAT_PROB);
-				if (rng_repeat(Utils::GetRngEngine()) == 1)
+				LOG_DEBUG(Utils::GetLogger(), "有人复读 <Repeat>: " + str + Utils::GetDescription(gm.GetSender()));
+				if (!repeat_state.isRepeated)
 				{
-					repeat_state.LastMsg = msg;
-					repeat_state.isRepeated = true;
-					client.SendGroupMessage(group.gid, msg);
-					LOG_INFO(Utils::GetLogger(), "bot复读成功 <Repeat>" + Utils::GetDescription(gm.GetSender(), false));
+					constexpr int REPEAT_PROB = 10;
+					std::uniform_int_distribution rng_repeat(1, REPEAT_PROB);
+					if (rng_repeat(Utils::GetRngEngine()) == 1)
+					{
+						repeat_state.LastMsg = msg;
+						repeat_state.isRepeated = true;
+						client.SendGroupMessage(group.gid, msg);
+						LOG_INFO(Utils::GetLogger(),
+					             "bot复读成功 <Repeat>" + Utils::GetDescription(gm.GetSender(), false));
+					}
 				}
 			}
-		}
-		else
-		{
-			repeat_state.LastMsg = msg;
-			repeat_state.isRepeated = false;
-		}
+			else
+			{
+				repeat_state.LastMsg = msg;
+				repeat_state.isRepeated = false;
+			}
 
-		state = repeat_state;
-	},
-	RepeatState{});
-	return false;
+			state = repeat_state;
+		},
+		RepeatState{});
+	return true;
 }
 
-}
+} // namespace GroupCommand

@@ -1,3 +1,5 @@
+#include "WhiteList.hpp"
+
 #include <charconv>
 #include <string>
 #include <vector>
@@ -5,16 +7,14 @@
 #include <PluginUtils/Common.hpp>
 #include <PluginUtils/StringUtils.hpp>
 
-#include <libmirai/mirai.hpp>
 #include <libmirai/Client.hpp>
+#include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>
 #include <Core/Client/Client.hpp>
 #include <Core/States/AccessCtrlList.hpp>
 #include <Core/Utils/Common.hpp>
 #include <Core/Utils/Logger.hpp>
-
-#include "WhiteList.hpp"
 
 using std::string;
 using std::vector;
@@ -23,11 +23,10 @@ namespace GroupCommand
 {
 
 bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client,
-                        Utils::BotConfig& config) 
+                        Utils::BotConfig& config)
 {
 	string str = Utils::ReplaceMark(Utils::GetText(gm.GetMessage()));
-	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') 
-		return false;
+	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') return false;
 
 	vector<string> tokens;
 	if (Utils::Tokenize(str, tokens) < 2) return false;
@@ -36,14 +35,15 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 	if (command != "#white" && command != "#白名单" && command != "#whitelist") return false;
 
 
-
 	LOG_INFO(Utils::GetLogger(), "Calling WhiteList <WhiteList>" + Utils::GetDescription(gm.GetSender()));
 
 	command = Utils::toLower(tokens[1]);
 	if (command == "help" || command == "h" || command == "帮助")
 	{
 		LOG_INFO(Utils::GetLogger(), "帮助文档 <WhiteList>" + Utils::GetDescription(gm.GetSender(), false));
-		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("usage:\n#whitelist {add/delete/exist} [QQ]...\n#whitelist {clear/clean/list}"));
+		client.SendGroupMessage(group.gid,
+		                        Mirai::MessageChain().Plain(
+									"usage:\n#whitelist {add/delete/exist} [QQ]...\n#whitelist {clear/clean/list}"));
 		return true;
 	}
 
@@ -65,7 +65,7 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 			for (auto&& member : member_list)
 				id_list.emplace(member.id);
 		}
-		
+
 		for (const auto& id : list)
 		{
 			if (!id_list.contains(id))
@@ -110,7 +110,8 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 		auto AtMsg = gm.GetMessage().GetAll<Mirai::AtMessage>();
 		if (tokens.size() < 3 && AtMsg.empty())
 		{
-			LOG_INFO(Utils::GetLogger(), "缺少参数[QQ] <WhiteList>: " + command + Utils::GetDescription(gm.GetSender(), false));
+			LOG_INFO(Utils::GetLogger(),
+			         "缺少参数[QQ] <WhiteList>: " + command + Utils::GetDescription(gm.GetSender(), false));
 			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("缺少参数[QQ]，是被你吃了嘛"));
 			return true;
 		}
@@ -123,7 +124,8 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 			auto result = std::from_chars(qq.data(), qq.data() + qq.size(), id);
 			if (result.ec != std::errc{})
 			{
-				LOG_INFO(Utils::GetLogger(), "无效参数[QQ] <WhiteList>: " + tokens[i] + Utils::GetDescription(gm.GetSender(), false));
+				LOG_INFO(Utils::GetLogger(),
+				         "无效参数[QQ] <WhiteList>: " + tokens[i] + Utils::GetDescription(gm.GetSender(), false));
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain(tokens[i] + "是个锤子QQ号"));
 				return true;
 			}
@@ -137,7 +139,7 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 			string msg = "查询结果:\n";
 			for (const auto& id : arr)
 			{
-				msg += id.to_string() + ((access_list->IsWhiteList(id))? " 在白名单中\n" : " 不在白名单中\n");
+				msg += id.to_string() + ((access_list->IsWhiteList(id)) ? " 在白名单中\n" : " 不在白名单中\n");
 			}
 			LOG_INFO(Utils::GetLogger(), "查询成功 <WhiteList>" + Utils::GetDescription(gm.GetSender(), false));
 			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain(msg));
@@ -148,8 +150,7 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 		{
 			auto botid = client->GetBotQQ();
 			for (const auto& id : arr)
-				if (id != botid)
-					access_list->WhiteListAdd(id);
+				if (id != botid) access_list->WhiteListAdd(id);
 			LOG_INFO(Utils::GetLogger(), "添加成功 <WhiteList>" + Utils::GetDescription(gm.GetSender(), false));
 			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("白名单更新好了捏"));
 			return true;
@@ -170,4 +171,4 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 	return true;
 }
 
-} 
+} // namespace GroupCommand

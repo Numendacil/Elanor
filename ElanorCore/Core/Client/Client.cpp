@@ -91,34 +91,34 @@ void Client::MsgQueue()
 	}
 }
 
-std::future<Mirai::MessageId_t> Client::SendGroupMessage(GID_t GroupId, const MessageChain& msg,
+std::future<Mirai::MessageId_t> Client::SendGroupMessage(GID_t GroupId, MessageChain msg,
                                                          std::optional<MessageId_t> QuoteId)
 {
 	std::unique_lock<std::mutex> lk(this->_mtx);
 	auto SendId =
-		this->_messages.emplace(GroupId, 0_qq, msg, QuoteId, Message::GROUP, std::promise<Mirai::MessageId_t>{}, 0)
+		this->_messages.emplace(GroupId, 0_qq, std::move(msg), QuoteId, Message::GROUP, std::promise<Mirai::MessageId_t>{}, 0)
 			.SendId.get_future();
 	this->_cv.notify_all();
 	return SendId;
 }
 
-std::future<Mirai::MessageId_t> Client::SendFriendMessage(QQ_t qq, const MessageChain& msg,
+std::future<Mirai::MessageId_t> Client::SendFriendMessage(QQ_t qq, MessageChain msg,
                                                           std::optional<MessageId_t> QuoteId)
 {
 	std::unique_lock<std::mutex> lk(this->_mtx);
 	auto SendId =
-		this->_messages.emplace(0_gid, qq, msg, QuoteId, Message::FRIEND, std::promise<Mirai::MessageId_t>{}, 0)
+		this->_messages.emplace(0_gid, qq, std::move(msg), QuoteId, Message::FRIEND, std::promise<Mirai::MessageId_t>{}, 0)
 			.SendId.get_future();
 	this->_cv.notify_all();
 	return SendId;
 }
 
-std::future<Mirai::MessageId_t> Client::SendTempMessage(GID_t GroupId, QQ_t qq, const MessageChain& msg,
+std::future<Mirai::MessageId_t> Client::SendTempMessage(GID_t GroupId, QQ_t qq, MessageChain msg,
                                                         std::optional<MessageId_t> QuoteId)
 {
 	std::unique_lock<std::mutex> lk(this->_mtx);
 	auto SendId =
-		this->_messages.emplace(GroupId, qq, msg, QuoteId, Message::TEMP, std::promise<Mirai::MessageId_t>{}, 0)
+		this->_messages.emplace(GroupId, qq, std::move(msg), QuoteId, Message::TEMP, std::promise<Mirai::MessageId_t>{}, 0)
 			.SendId.get_future();
 	this->_cv.notify_all();
 	return SendId;

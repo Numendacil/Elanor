@@ -1,5 +1,6 @@
 #include <map>
 #include <string>
+
 #include <nlohmann/json_fwd.hpp>
 
 namespace State
@@ -20,4 +21,4 @@ void from_json(const nlohmann::json& j, BililiveList& p);
 
 void to_json(nlohmann::json& j, const BililiveList& p);
 
-}
+} // namespace State
