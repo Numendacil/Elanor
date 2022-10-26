@@ -22,10 +22,10 @@
 #include <Core/Utils/Logger.hpp>
 
 #include <Core/Utils/Common.hpp>
-#include "ImageUtils.hpp"
 #include <PluginUtils/Base64.hpp>
 
 #include <stduuid/include/uuid.h>
+#include <Utils/ImageUtils.hpp>
 
 using std::string;
 using json = nlohmann::json;

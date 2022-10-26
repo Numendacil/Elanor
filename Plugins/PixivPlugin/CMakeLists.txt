@@ -13,6 +13,7 @@ target_link_libraries(PixivPlugin PRIVATE libvips::libvips)
 target_link_libraries(PixivPlugin PRIVATE OpenSSL::Crypto)
 target_link_libraries(PixivPlugin PRIVATE stduuid)
 
-add_subdirectory(Functions)
+add_subdirectory(Handlers)
 add_subdirectory(GroupCommand)
 add_subdirectory(PixivClient)
+add_subdirectory(Utils)

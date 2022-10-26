@@ -14,7 +14,7 @@
 #include <Core/Utils/Common.hpp>
 #include <Core/Utils/Logger.hpp>
 
-#include <Functions/PixivId.hpp>
+#include <Handlers/PixivId.hpp>
 
 using json = nlohmann::json;
 using std::string;

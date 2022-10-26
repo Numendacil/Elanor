@@ -25,7 +25,7 @@ class Group;
 namespace Utils
 {
 
-inline std::string exec(std::vector<std::string>& cmd, int& status)
+inline std::string exec(std::vector<std::string> cmd, int& status)
 {
 	if (cmd.empty()) return {};
 
@@ -39,13 +39,11 @@ inline std::string exec(std::vector<std::string>& cmd, int& status)
 	int p[2];	// NOLINT(*-avoid-c-arrays)
 	if (pipe(p) == -1)
 	{
-		perror("Failed to open pipe");
-		return {};
+		throw std::runtime_error("Failed to open pipe");
 	}
 	if ((pid = fork()) == -1)
 	{
-		perror("Failed to fork program");
-		return {};
+		throw std::runtime_error("Failed to fork program");
 	}
 	if (pid == 0)
 	{
@@ -67,10 +65,42 @@ inline std::string exec(std::vector<std::string>& cmd, int& status)
 
 	if (waitpid(pid, &status, 0) == -1)
 	{
-		return {};
+		throw std::runtime_error("Waitpid failed");
 	}
 
 	return result;
+}
+
+inline int exec(std::vector<std::string> cmd)
+{
+	if (cmd.empty()) return {};
+
+	std::string result = "";
+	std::vector<char *> param(cmd.size() + 1);
+	std::transform(cmd.begin(), cmd.end(), param.begin(),
+		[](std::string& str) { return str.data(); });
+	param.back() = nullptr;
+
+	pid_t pid{};
+	if ((pid = fork()) == -1)
+	{
+		throw std::runtime_error("Failed to fork program");
+	}
+	if (pid == 0)
+	{
+		execvp(param[0], param.data());
+		perror(("Failed to execute " + cmd[0]).c_str());
+		exit(1);
+	}
+
+	int status{};
+
+	if (waitpid(pid, &status, 0) == -1)
+	{
+		throw std::runtime_error("Waitpid failed");
+	}
+
+	return status;
 }
 
 inline bool CheckAuth(const Mirai::GroupMember& member, const Bot::Group& group, int permission)

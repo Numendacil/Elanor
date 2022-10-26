@@ -30,13 +30,13 @@ bool Answer::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 
 	auto state = group.GetState<State::Activity>();
 	if (!state->HasActivity()) return false;
-	if (state->GetActivityName() == "pjsk")
-	{
-		string answer{input.substr(1)};
-		LOG_INFO(Utils::GetLogger(), "<Answer: pjsk>: " + answer + Utils::GetDescription(gm.GetSender()));
-		state->AddAnswer({answer, gm.GetMessage().GetSourceInfo().value_or(Mirai::MessageChain::SourceInfo{}).id});
-		return true;
-	}
+	// if (state->GetActivityName() == "pjsk")
+	// {
+	// 	string answer{input.substr(1)};
+	// 	LOG_INFO(Utils::GetLogger(), "<Answer: pjsk>: " + answer + Utils::GetDescription(gm.GetSender()));
+	// 	state->AddAnswer({answer, gm.GetMessage().GetSourceInfo().value_or(Mirai::MessageChain::SourceInfo{}).id});
+	// 	return true;
+	// }
 	return false;
 }
 
