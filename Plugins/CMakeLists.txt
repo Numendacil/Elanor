@@ -64,6 +64,7 @@ add_subdirectory(Utils)
 add_subdirectory(AdminPlugin)
 add_subdirectory(BilibiliPlugin)
 add_subdirectory(CommonPlugin)
+add_subdirectory(ImageSearchPlugin)
 add_subdirectory(MemePlugin)
 add_subdirectory(PixivPlugin)
 
