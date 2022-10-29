@@ -7,7 +7,6 @@
 
 #include <croncpp.h>
 
-#include <libmirai/Client.hpp>
 #include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>

@@ -1,7 +1,7 @@
 #include <PluginUtils/TypeList.hpp>
 #include <GroupCommand/Choyen.hpp>
 #include <GroupCommand/Petpet.hpp>
-#include <vips/vips.h>
+#include <vips/vips8>
 
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>

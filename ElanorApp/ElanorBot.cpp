@@ -14,7 +14,6 @@
 #include <Utils/PluginManager.hpp>
 
 #include <libmirai/mirai.hpp>
-#include <libmirai/Client.hpp>
 
 #include <Core/Interface/IGroupCommand.hpp>
 #include <Core/Interface/ITrigger.hpp>

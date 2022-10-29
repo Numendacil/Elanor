@@ -8,7 +8,6 @@
 #include <PluginUtils/Common.hpp>
 #include <PluginUtils/StringUtils.hpp>
 
-#include <libmirai/Client.hpp>
 #include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>

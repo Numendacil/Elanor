@@ -11,7 +11,6 @@
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 
-#include <libmirai/Client.hpp>
 #include <libmirai/mirai.hpp>
 
 #include <Core/Bot/Group.hpp>

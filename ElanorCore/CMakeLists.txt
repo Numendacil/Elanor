@@ -17,7 +17,9 @@ target_include_directories(
 )
 
 target_compile_features(${ELANORBOT_CORE} PUBLIC cxx_std_20)
-target_link_libraries(${ELANORBOT_CORE} PUBLIC pthread)
+
+find_package(Threads REQUIRED)
+target_link_libraries(${ELANORBOT_CORE} PUBLIC Threads::Threads)
 
 set_target_properties(${ELANORBOT_CORE} PROPERTIES INSTALL_RPATH "$\{ORIGIN\};${INSTALL_RPATH}")
 set_target_properties(${ELANORBOT_CORE} PROPERTIES PREFIX "")
@@ -33,7 +35,7 @@ if(ELANOR_BUILD_MOCK_LIB)
 	add_library(${ELANORBOT_MOCKCORE})
 	add_library(${CMAKE_PROJECT_NAME}::${ELANORBOT_MOCKCORE} ALIAS ${ELANORBOT_MOCKCORE})
 	target_compile_features(${ELANORBOT_MOCKCORE} PUBLIC cxx_std_20)
-	target_link_libraries(${ELANORBOT_MOCKCORE} PUBLIC pthread)
+	target_link_libraries(${ELANORBOT_MOCKCORE} PUBLIC Threads::Threads)
 	target_include_directories(${ELANORBOT_MOCKCORE} PUBLIC .)
 
 endif(ELANOR_BUILD_MOCK_LIB)
