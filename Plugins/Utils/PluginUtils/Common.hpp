@@ -25,7 +25,7 @@ class Group;
 namespace Utils
 {
 
-inline std::string exec(std::vector<std::string> cmd, int& status)
+inline std::string ExecCmd(std::vector<std::string> cmd, int& status)
 {
 	if (cmd.empty()) return {};
 
@@ -71,7 +71,7 @@ inline std::string exec(std::vector<std::string> cmd, int& status)
 	return result;
 }
 
-inline int exec(std::vector<std::string> cmd)
+inline int ExecCmd(std::vector<std::string> cmd)
 {
 	if (cmd.empty()) return {};
 

@@ -96,9 +96,7 @@ struct UrlComponent
 		}
 
 		int port{};
-		std::string_view port_str = str.substr(n + 1);
-		auto result = std::from_chars(port_str.data(), port_str.data() + port_str.size(), port);
-		if (result.ec != std::errc())
+		if (!Utils::Str2Num(str.substr(n + 1), port))
 			return std::make_pair(this->authority.substr(0, n), -1);
 
 		return std::make_pair(this->authority.substr(0, n), port);

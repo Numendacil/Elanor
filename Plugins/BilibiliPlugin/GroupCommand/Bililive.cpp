@@ -152,16 +152,12 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 		}
 
 		long uid{};
+		if (!Utils::Str2Num(tokens[2], uid))
 		{
-			std::string_view uid_str = tokens[2];
-			auto result = std::from_chars(uid_str.data(), uid_str.data() + uid_str.size(), uid);
-			if (result.ec != std::errc{})
-			{
-				LOG_INFO(Utils::GetLogger(),
-				         "无效参数[uid] <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
-				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain(tokens[2] + "是个锤子uid"));
-				return true;
-			}
+			LOG_INFO(Utils::GetLogger(),
+					"无效参数[uid] <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
+			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain(tokens[2] + "是个锤子uid"));
+			return true;
 		}
 
 		auto result = cli.Get(

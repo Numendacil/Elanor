@@ -118,9 +118,7 @@ bool CommandAuth::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group,
 			}
 
 			int auth{};
-			std::string_view level = tokens[3];
-			auto result = std::from_chars(level.data(), level.data() + level.size(), auth);
-			if (result.ec == std::errc{})
+			if (Utils::Str2Num(tokens[3], auth))
 			{
 				if (auth > 100 || auth < 0) // NOLINT(*-avoid-magic-numbers)
 				{

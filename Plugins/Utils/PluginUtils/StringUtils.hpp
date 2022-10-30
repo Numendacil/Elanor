@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <charconv>
 #include <vector>
 
 namespace Utils
@@ -25,6 +26,15 @@ inline bool isInt(std::string_view str)
 {
 	const static std::regex r_int = std::regex(R"([\+-]?\d+)", std::regex::icase);
 	return std::regex_match(str.cbegin(), str.cend(), r_int);
+}
+
+template <typename T>
+inline bool Str2Num(std::string_view str, T& value, int base = 10)	// NOLINT(*-avoid-magic-numbers)
+{
+	auto result = std::from_chars(str.data(), str.data() + str.size(), value, base);
+	if (result.ec != std::errc{})
+		return false;
+	return true;
 }
 
 constexpr std::string_view trim(std::string_view str, std::string_view whitespace = " ")

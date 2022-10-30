@@ -130,10 +130,8 @@ bool Petpet::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 			return true;
 		}
 
-		std::string_view qq = tokens[1];
 		int64_t id{};
-		auto result = std::from_chars(qq.data(), qq.data() + qq.size(), id);
-		if (result.ec != std::errc{})
+		if (!Utils::Str2Num(tokens[1], id))
 		{
 			LOG_INFO(Utils::GetLogger(),
 					"无效参数[QQ] <Petpet>: " + tokens[1] + Utils::GetDescription(gm.GetSender(), false));

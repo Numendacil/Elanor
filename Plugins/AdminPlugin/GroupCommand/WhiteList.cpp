@@ -119,9 +119,7 @@ bool WhiteList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 		for (int i = 2; i < tokens.size(); i++)
 		{
 			int64_t id{};
-			std::string_view qq = tokens[i];
-			auto result = std::from_chars(qq.data(), qq.data() + qq.size(), id);
-			if (result.ec != std::errc{})
+			if (!Utils::Str2Num(tokens[i], id))
 			{
 				LOG_INFO(Utils::GetLogger(),
 				         "无效参数[QQ] <WhiteList>: " + tokens[i] + Utils::GetDescription(gm.GetSender(), false));

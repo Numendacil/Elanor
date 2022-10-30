@@ -51,9 +51,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 	PID_t pid;
 	{
 		int64_t num{};
-		std::string_view str = tokens[2];
-		auto result = std::from_chars(str.data(), str.data() + str.size(), num);
-		if (result.ec != std::errc{})
+		if (!Utils::Str2Num(tokens[2], num))
 		{
 			LOG_INFO(Utils::GetLogger(),
 			         "无效参数[pid] <Pixiv Id>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
@@ -70,9 +68,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 			page = 0;
 		else
 		{
-			std::string_view str = tokens[3];
-			auto result = std::from_chars(str.data(), str.data() + str.size(), page);
-			if (result.ec != std::errc{})
+			if (!Utils::Str2Num(tokens[3], page))
 			{
 				LOG_INFO(Utils::GetLogger(),
 				         "无效参数(page) <Pixiv Id>: " + tokens[3] + Utils::GetDescription(gm.GetSender(), false));

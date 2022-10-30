@@ -98,7 +98,7 @@ bool Choyen::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 		cmd.emplace_back("--rlower");
 	
 	int status{};
-	std::string output = Utils::exec(std::move(cmd), status);
+	std::string output = Utils::ExecCmd(std::move(cmd), status);
 	if (output.empty())
 	{
 		LOG_WARN(Utils::GetLogger(), "Error occured when executing 5000choyen <Choyen>");
