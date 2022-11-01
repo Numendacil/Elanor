@@ -3,17 +3,27 @@
 	{
 		"PluginsFolder": "Plugins",
 		"BotFolder": "Bots",
-		"MediaFiles": "media_files",
+		"MediaFiles": "MediaFiles",
 		"pymodules": "pymodules"
 	},
+
 	"suid": 0,
+
 	"proxy":
 	{
 		"host": "",
 		"port": -1
 	},
+
 	"pixiv":
 	{
-		"token": ""
+		"token": "",
+		"proxy": null
+	},
+
+	"saucenao":
+	{
+		"token": "",
+		"proxy": null
 	}
 }

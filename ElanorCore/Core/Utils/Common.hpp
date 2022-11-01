@@ -50,7 +50,8 @@ public:
 		                                                                          std::forward<ValueType>(value)));
 		std::lock_guard<std::mutex> lk(this->_mtx);
 		auto jp = nlohmann::json::json_pointer(key);
-		if (this->_config.contains(jp)) return this->_config.at(jp).template get<ReturnType>();
+		if (this->_config.contains(jp)) 
+			return this->_config.at(jp).template get<ReturnType>();
 		else
 			return (ReturnType)std::forward<ValueType>(value);
 	}
@@ -63,6 +64,26 @@ public:
 		if (this->_config.contains(jp)) return this->_config.at(jp).get<ValueType>();
 		else
 			return std::nullopt;
+	}
+
+	template <typename KeyType>
+	bool exist(KeyType&& key) const
+	{
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		auto jp = nlohmann::json::json_pointer(key);
+		return this->_config.contains(jp);
+	}
+
+	template <typename KeyType>
+	bool IsNull(KeyType&& key) const
+	{
+		std::lock_guard<std::mutex> lk(this->_mtx);
+		auto jp = nlohmann::json::json_pointer(key);
+		if (this->_config.contains(jp)) 
+			return this->_config.at(jp).is_null();
+		else
+			return false;
+
 	}
 };
 

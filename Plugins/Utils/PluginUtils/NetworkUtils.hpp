@@ -1,6 +1,7 @@
 #ifndef _UTILS_NETWORK_UTILS_HPP_
 #define _UTILS_NETWORK_UTILS_HPP_
 
+#include <map>
 #include <optional>
 #include <httplib.h>
 #include <nlohmann/json.hpp>
@@ -65,6 +66,47 @@ inline nlohmann::json GetJsonResponse(const httplib::Result& result)
 	}
 }
 
+inline std::string EncodeUri(const std::string& value)
+{
+	std::ostringstream escaped;
+	escaped.fill('0');
+	escaped << std::hex;
+
+	for (auto c : value)
+	{
+		if (std::isalnum(static_cast<uint8_t>(c)) || c == '-' || c == '_' || c == '.' || c == '!' || c == '~'
+		    || c == '*' || c == '\'' || c == '(' || c == ')')
+		{
+			escaped << c;
+		}
+		else
+		{
+			escaped << std::uppercase;
+			escaped << '%' << std::setw(2) << static_cast<int>(static_cast<unsigned char>(c));
+			escaped << std::nouppercase;
+		}
+	}
+
+	return escaped.str();
+}
+
+using Params = std::multimap<std::string, std::string>;
+inline std::string Params2Query(const Params& params)
+{
+	std::string query;
+
+	for (auto it = params.begin(); it != params.end(); ++it)
+	{
+		if (it != params.begin())
+		{
+			query += "&";
+		}
+		query += it->first;
+		query += "=";
+		query += EncodeUri(it->second);
+	}
+	return query;
+}
 }
 
 

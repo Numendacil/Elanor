@@ -100,7 +100,15 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 	// Pixiv Api
 	//////////////////
 
-	auto pclient = GetClient(config.Get("/pixiv/token", ""), config.Get("/proxy/host", ""), config.Get("/proxy/port", -1));
+	std::shared_ptr<PixivClient> pclient;
+	if (config.IsNull("/pixiv/proxy"))
+		pclient = GetClient(config.Get("/pixiv/token", ""));
+	else
+		pclient = GetClient(
+			config.Get("/pixiv/token", ""), 
+			config.Get("/pixiv/proxy/host", config.Get("/proxy/host", "")), 
+			config.Get("/pixiv/proxy/port", config.Get("/proxy/port", -1))
+		);
 	Illust illust;
 	try
 	{
@@ -210,9 +218,8 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 			double sigma = (illust.x_restrict == X_RESTRICT::R18 ? R18_RATIO : R18G_RATIO) 
 					* std::max(illust.width, illust.height);
 
-			unsigned char* out = ImageUtils::CensorImage(image, sigma, len, cover);
-			msg += Mirai::ImageMessage({}, {}, {}, Utils::b64encode(out, len));
-			VIPS_FREE(out);
+			auto out = ImageUtils::CensorImage(image, sigma, len, cover);
+			msg += Mirai::ImageMessage({}, {}, {}, Utils::b64encode(out.get(), len));
 		}
 		
 		LOG_INFO(Utils::GetLogger(), "上传结果 <Pixiv Id>" + Utils::GetDescription(gm.GetSender(), false));
@@ -327,7 +334,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 						* std::max(illust.width, illust.height);
 
 				size_t len{};
-				unsigned char* out = ImageUtils::CensorImage(image, sigma, len, cover);
+				auto out = ImageUtils::CensorImage(image, sigma, len, cover);
 
 				if (bytes_count > MAX_BYTES_MEMORY)
 				{
@@ -336,16 +343,15 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 								/ std::filesystem::path("tmp") / tmpfile;
 					std::ofstream ofile(tmp_path);
 
-					ofile.write(reinterpret_cast<char *>(out), len);	// NOLINT
+					ofile.write(reinterpret_cast<char *>(out.get()), len);	// NOLINT
 					node.SetMessageChain(Mirai::MessageChain().Image("", "", tmp_path, ""));
 				}
 				else
 				{
 					bytes_count += len;
-					node.SetMessageChain(Mirai::MessageChain().Image("", "", "", Utils::b64encode(out, len)));
+					node.SetMessageChain(Mirai::MessageChain().Image("", "", "", Utils::b64encode(out.get(), len)));
 				}
 				msg.emplace_back(node);
-				VIPS_FREE(out);
 			}
 		}
 	

@@ -13,7 +13,7 @@
 
 #include <Core/Utils/Logger.hpp>
 
-#include <openssl/md5.h>
+#include <openssl/evp.h>
 
 using std::string;
 using json = nlohmann::json;
@@ -34,17 +34,52 @@ void AddClientHashHeader(httplib::Headers& headers)
 	char time_str[128];
 	std::strftime(time_str, 128, "%Y-%m-%dT%H:%M:%S+00:00", std::localtime(&t));
 
-	unsigned char md5[MD5_DIGEST_LENGTH];
-	char buf[MD5_DIGEST_LENGTH * 2 + 1];
 	string hashstr = string(time_str) + string(hash_secret);
-	MD5(reinterpret_cast<const unsigned char *>(hashstr.c_str()), hashstr.size(), md5);
+
+	std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> ctx(
+		EVP_MD_CTX_new(),
+		EVP_MD_CTX_free
+	);
+	if (!ctx)
+		throw std::runtime_error("Failed to create md context");
+
+	int rc = EVP_DigestInit_ex(ctx.get(), EVP_md5(), nullptr);
+	if(rc != 1)
+		throw std::runtime_error("Failed to init digest");
+
+	constexpr auto MAX_SIZE = std::numeric_limits<int>::max();
+	const auto* pos = hashstr.data();
+	size_t remaining = hashstr.size();
+	while (remaining > MAX_SIZE)
+	{
+		rc = EVP_DigestUpdate(ctx.get(), pos, MAX_SIZE);
+		if(rc != 1)
+			throw std::runtime_error("Failed to update digest");
+		remaining -= MAX_SIZE;
+		pos += MAX_SIZE;
+	}
+	rc = EVP_DigestUpdate(ctx.get(), pos, remaining);
+	if(rc != 1)
+		throw std::runtime_error("Failed to update digest");
+
+	constexpr size_t MD5_DIGEST_LENGTH = 16;
+	unsigned char buffer[MD5_DIGEST_LENGTH];
+	uint digest_len{};
+	rc = EVP_DigestFinal_ex(
+		ctx.get(), 
+		buffer, 
+		&digest_len
+	);
+	assert(digest_len == MD5_DIGEST_LENGTH);
+
+	char result[2 * MD5_DIGEST_LENGTH + 1];
 	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
-		sprintf(buf + 2 * i, "%02x", md5[i]);
+		sprintf(result + 2 * i, "%02x", buffer[i]);
 	
 	// NOLINTEND
 
 	headers.emplace("x-client-time", time_str);
-	headers.emplace("x-client-hash", buf);
+	headers.emplace("x-client-hash", result);
 }
 
 void AddMiscHeaders(httplib::Headers& headers)

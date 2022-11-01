@@ -1,5 +1,5 @@
-#ifndef _PIXIV_FUNCTIONS_PIXIVID_HPP_
-#define _PIXIV_FUNCTIONS_PIXIVID_HPP_
+#ifndef _PIXIV_HANDLERS_PIXIVID_HPP_
+#define _PIXIV_HANDLERS_PIXIVID_HPP_
 
 #include <string>
 #include <vector>

@@ -17,7 +17,7 @@ extern "C"
 
 	void InitPlugin() 
 	{
-		VIPS_INIT("");
+		VIPS_INIT("");		// NOLINT(*-vararg)
 	}
 
 
