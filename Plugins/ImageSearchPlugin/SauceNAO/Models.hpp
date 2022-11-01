@@ -1,12 +1,26 @@
 #ifndef _IMAGE_SEARCH_SAUCENAO_MODELS_HPP_
 #define _IMAGE_SEARCH_SAUCENAO_MODELS_HPP_
 
+#include <array>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 namespace SauceNAO
 {
+
+struct SauceNAOError : public std::runtime_error
+{
+	const std::string message;
+	const int status;
+
+	SauceNAOError(std::string message, int status) : 
+	std::runtime_error("Error response from SauceNAO: " + message + "<" + std::to_string(status) + ">"),
+	message(std::move(message)), status(status)
+	{}
+};
 
 struct SauceNAOResult
 {
@@ -22,9 +36,9 @@ struct SauceNAOResult
 
 		int32_t status{};
 
-		std::string ResultsExpected;	// should be integer
+		uint32_t ResultsExpected;	// should be integer
 		std::string SearchDepth;		// should be integer
-		float MinSimularity{};
+		double MinSimilarity{};
 
 		std::string QueryImgDisplay;
 
@@ -32,47 +46,7 @@ struct SauceNAOResult
 
 		// `index`, `query_image` are ignored
 
-		friend void from_json(const nlohmann::json& j, Header& p)
-		{
-			j.at("user_id").get_to(p.UserId);
-			j.at("account_type").get_to(p.AccountType);
-
-			j.at("short_limit").get_to(p.ShortLimit);
-			j.at("long_limit").get_to(p.LongLimit);
-			j.at("short_remaining").get_to(p.ShortRemaining);
-			j.at("long_remaining").get_to(p.LongRemaining);
-
-			j.at("status").get_to(p.status);
-
-			j.at("results_requested").get_to(p.ResultsExpected);
-			j.at("search_depth").get_to(p.SearchDepth);
-			j.at("minimum_similarity").get_to(p.MinSimularity);
-
-			j.at("query_image_display").get_to(p.QueryImgDisplay);
-
-			j.at("results_returned").get_to(p.ResultsReturned);
-		}
-
-		friend void to_json(nlohmann::json& j, const Header& p)
-		{
-			j["user_id"] = p.UserId;
-			j["account_type"] = p.AccountType;
-
-			j["short_limit"] = p.ShortLimit;
-			j["long_limit"] = p.LongLimit;
-			j["short_remaining"] = p.ShortRemaining;
-			j["long_remaining"] = p.LongRemaining;
-
-			j["status"] = p.status;
-
-			j["results_requested"] = p.ResultsExpected;
-			j["search_depth"] = p.SearchDepth;
-			j["minimum_similarity"] = p.MinSimularity;
-
-			j["query_image_display"] = p.QueryImgDisplay;
-
-			j["results_returned"] = p.ResultsReturned;
-		}
+		friend void from_json(const nlohmann::json& j, Header& p);
 
 	} header{};
 
@@ -80,58 +54,31 @@ struct SauceNAOResult
 	{
 		struct Header
 		{
-			std::string simularity;		// Should be float
+			std::string similarity;		// Should be float
 			std::string thumbnail;
 			uint8_t index{};
 			std::string IndexName{};
 			uint32_t dupes{};
 			int hidden{};		// Should be bool
-			friend void from_json(const nlohmann::json& j, Header& p)
-			{
-				j.at("simularity").get_to(p.simularity);
-				j.at("thumbnail").get_to(p.thumbnail);
-				j.at("index_id").get_to(p.index);
-				j.at("index_name").get_to(p.IndexName);
-				j.at("dupes").get_to(p.dupes);
-				j.at("hidden").get_to(p.hidden);
-			}
-			friend void to_json(nlohmann::json& j, const Header& p)
-			{
-				j["simularity"] = p.simularity;
-				j["thumbnail"] = p.thumbnail;
-				j["index_id"] = p.index;
-				j["index_name"] = p.IndexName;
-				j["dupes"] = p.dupes;
-				j["hidden"] = p.hidden;
-			}
+
+			friend void from_json(const nlohmann::json& j, Header& p);
 		} header{};
 
-		nlohmann::json data;
-		friend void from_json(const nlohmann::json& j, Result& p)
+		
+		struct ResultInfo
 		{
+			std::string title;
+			std::string author;
+			std::string url;
+			std::map<std::string, std::string> extras;
+		} data{};
 
-				j.at("header").get_to(p.header);
-				j.at("data").get_to(p.data);
-		}
-		friend void to_json(nlohmann::json& j, const Result& p)
-		{
-			j["header"] = p.header;
-			j["data"] = p.data;
-		}
+		friend void from_json(const nlohmann::json& j, Result& p);
 	};
 
 	std::vector<Result> results;
-	friend void from_json(const nlohmann::json& j, SauceNAOResult& p)
-	{
 
-			j.at("header").get_to(p.header);
-			j.at("results").get_to(p.results);
-	}
-	friend void to_json(nlohmann::json& j, const SauceNAOResult& p)
-	{
-		j["header"] = p.header;
-		j["results"] = p.results;
-	}
+	friend void from_json(const nlohmann::json& j, SauceNAOResult& p);
 };
 
 
@@ -176,7 +123,7 @@ _DECLARE_MASK_(H_ANIME, 22);
 _DECLARE_MASK_(MOVIES, 23);
 _DECLARE_MASK_(SHOWS, 24);
 _DECLARE_MASK_(GELBOORU, 25);
-_DECLARE_MASK_(KANACHAN, 26);
+_DECLARE_MASK_(KONACHAN, 26);
 _DECLARE_MASK_(SANKAKU, 27);
 _DECLARE_MASK_(ANIME_PIC, 28);
 _DECLARE_MASK_(E621, 29);
@@ -184,7 +131,7 @@ _DECLARE_MASK_(IDOL_COMPLEX, 30);
 _DECLARE_MASK_(BCY_ILLUST, 31);
 _DECLARE_MASK_(BCY_COSPLAY, 32);
 _DECLARE_MASK_(PORTAL_GRAPHICS, 33);
-_DECLARE_MASK_(DA, 34);
+_DECLARE_MASK_(DEVIANT_ART, 34);
 _DECLARE_MASK_(PAWOO, 35);
 _DECLARE_MASK_(MADOKAMI, 36);
 _DECLARE_MASK_(MANGADEX, 37);
@@ -201,14 +148,61 @@ _DECLARE_MASK_(SKEB, 44);
 constexpr uint64_t MASK_ALL = H_MAGS | HCG | PIXIV | PIXIV_HISTORY | SEIGA_ILLUST
 						| DANBOORU | DRAWR | NIJIE | YANDE_RE | FAKKU 
 						| NHENTAI_HMISC | MARKET2D | MEDIBANG | ANIME
-						| H_ANIME | MOVIES | SHOWS | GELBOORU | KANACHAN
+						| H_ANIME | MOVIES | SHOWS | GELBOORU | KONACHAN
 						| SANKAKU | ANIME_PIC | E621 | IDOL_COMPLEX
-						| BCY_ILLUST | BCY_COSPLAY | PORTAL_GRAPHICS | DA
+						| BCY_ILLUST | BCY_COSPLAY | PORTAL_GRAPHICS | DEVIANT_ART
 						| PAWOO | MADOKAMI | MANGADEX | EHENTAI_HMISC
 						| ART_STATION | FUR_AFFINITY | TWITTER | FURRY_NETWORK 
 						| KEMONO | SKEB ;
 
 
+constexpr std::array<std::string_view, Mask2Index(SKEB) + 1> INDEX_NAME = {
+	"H-Magazines",
+	"H-Anime*",
+	"H-Game CG",
+	"ddb-objects*",
+	"ddb-samples*",
+	"Pixiv",
+	"Pixiv - Historical",
+	"anime*",
+	"Nico Nico Seiga",
+	"Danbooru",
+	"drawr Images",
+	"Nijie Images",
+	"Yande.re",
+	"animeop*",
+	"IMDb*",
+	"Shutterstock*",
+	"FAKKU",
+	"reserved",
+	"H-MISC (NHentai)",
+	"2D-Market",
+	"MediBang",
+	"Anime",
+	"H-Anime",
+	"Movies",
+	"Shows",
+	"Gelbooru",
+	"Konachan",
+	"Sankaku Channel",
+	"Anime-Pictures",
+	"e621",
+	"Idol Complex",
+	"bcy Illust",
+	"bcy Cosplay",
+	"PortalGraphics",
+	"deviantArt",
+	"Pawoo",
+	"Madokami (Manga)",
+	"MangaDex",
+	"H-Misc (E-Hentai)",
+	"ArtStation",
+	"FurAffinity",
+	"Twitter",
+	"Furry Network",
+	"Kemono",
+	"Skeb"
+};
 
 }
 

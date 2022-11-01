@@ -3,6 +3,7 @@ target_sources(
 	PRIVATE
 
 	Models.hpp
+	Models.cpp
 	SauceClient.hpp
 	SauceClient.cpp
 )

@@ -1,11 +1,12 @@
 #include <PluginUtils/TypeList.hpp>
+#include <GroupCommand/ImageSearch.hpp>
 #include <utility>
 #include <vips/vips8>
 
 #define PLUGIN_ENTRY_IMPL
 #include <Core/Interface/PluginEntry.hpp>
 
-using GroupCommandList = Utils::TypeList<>;
+using GroupCommandList = Utils::TypeList< GroupCommand::ImageSearch >;
 using TriggerList = Utils::TypeList<>;
 
 extern "C"
@@ -13,18 +14,18 @@ extern "C"
 
 	void InitPlugin() 
 	{
-		VIPS_INIT("");
+		VIPS_INIT("");		// NOLINT(*-vararg)
 	}
 
 
 	const char* GetPluginName()
 	{
-		return "PixivPlugin";
+		return "ImageSearchPlugin";
 	}
 
 	const char* GetPluginInfo()
 	{
-		return "Plugin for Pixiv related functions";
+		return "Plugin for image searching functions";
 	}
 
 

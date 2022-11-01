@@ -11,4 +11,6 @@ target_include_directories(ImageSearch PRIVATE .)
 target_link_libraries(ImageSearch PRIVATE libvips::libvips)
 target_link_libraries(ImageSearch PRIVATE httplib::httplib)
 
+add_subdirectory(GroupCommand)
+add_subdirectory(Handlers)
 add_subdirectory(SauceNAO)
