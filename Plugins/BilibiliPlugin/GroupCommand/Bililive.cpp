@@ -57,6 +57,14 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 
 	LOG_INFO(Utils::GetLogger(), "Calling Bililive <Bililive>" + Utils::GetDescription(gm.GetSender()));
 
+	if (!Utils::CheckAuth(gm.GetSender(), group, this->Permission()))
+	{
+		LOG_INFO(Utils::GetLogger(), "权限不足 <Bililive>" + Utils::GetDescription(gm.GetSender(), false));
+		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("权限不足捏～"));
+		return true;
+	}
+
+
 	command = Utils::toLower(tokens[1]);
 
 	if (command == "help" || command == "h" || command == "帮助")
@@ -80,9 +88,13 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 		for (const auto& [uid, info] : bililist.user_list)
 		{
 			auto result = cli.Get(
-				"/live_user/v1/Master/info", {{"uid", std::to_string(uid)}},
-				{{"Accept-Encoding", "gzip"},
-			     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
+				"/live_user/v1/Master/info", 
+				{{"uid", std::to_string(uid)}},
+				{
+					{"Accept-Encoding", "gzip, deflate"},
+					{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}
+				}
+			);
 
 			json content;
 			try
@@ -107,9 +119,13 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 			message += "\n" + content["data"]["info"]["uname"].get<string>() + " (" + std::to_string(uid) + "): ";
 
 			result = cli.Get(
-				"/room/v1/Room/get_info", {{"id", std::to_string(info.room_id)}},
-				{{"Accept-Encoding", "gzip"},
-			     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
+				"/room/v1/Room/get_info", 
+				{{"id", std::to_string(info.room_id)}},
+				{
+					{"Accept-Encoding", "gzip, deflate"},
+					{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}
+				}
+			);
 
 			try
 			{
@@ -129,7 +145,8 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
 				return true;
 			}
-			if (content["data"]["live_status"].get<int>() == 0) message += "未开播 ⚫";
+			if (content["data"]["live_status"].get<int>() == 0) 
+				message += "未开播 ⚫";
 			else
 				message += (content["data"]["live_status"].get<int>() == 1) ? "直播中 🔴" : "轮播中 🔵";
 
@@ -155,47 +172,8 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 		if (!Utils::Str2Num(tokens[2], uid))
 		{
 			LOG_INFO(Utils::GetLogger(),
-					"无效参数[uid] <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
+			         "无效参数[uid] <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
 			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain(tokens[2] + "是个锤子uid"));
-			return true;
-		}
-
-		auto result = cli.Get(
-			"/live_user/v1/Master/info'", {{"uid", std::to_string(uid)}},
-			{{"Accept-Encoding", "gzip"},
-		     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
-
-		json content;
-		try
-		{
-			content = Utils::GetJsonResponse(result);
-		}
-		catch (const std::exception& e)
-		{
-			LOG_WARN(Utils::GetLogger(), "Request failed /live_user/v1/Master/info <Bililive>: " + string(e.what()));
-			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
-			return true;
-		}
-
-		if (content["code"].get<int>() != 0)
-		{
-			LOG_WARN(Utils::GetLogger(),
-			         "Error response from /live_user/v1/Master/info' <Bililive>: " + content["msg"].get<string>());
-			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
-			return true;
-		}
-		if (content["data"]["info"]["uname"].get<string>().empty())
-		{
-			LOG_INFO(Utils::GetLogger(),
-			         "用户不存在 <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
-			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该用户不存在捏"));
-			return true;
-		}
-		if (content["data"]["room_id"].get<long>() == 0)
-		{
-			LOG_INFO(Utils::GetLogger(),
-			         "直播间不存在 <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
-			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该用户貌似暂未开通直播功能捏"));
 			return true;
 		}
 
@@ -208,6 +186,51 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该用户已经在名单里了捏"));
 				return true;
 			}
+
+			auto result = cli.Get(
+				"/live_user/v1/Master/info", 
+				{{"uid", std::to_string(uid)}}, 
+				{
+					{"Accept-Encoding", "gzip, deflate"},
+					{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}
+				}
+			);
+
+			json content;
+			try
+			{
+				content = Utils::GetJsonResponse(result);
+			}
+			catch (const std::exception& e)
+			{
+				LOG_WARN(Utils::GetLogger(), "Request failed /live_user/v1/Master/info <Bililive>: " + string(e.what()));
+				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
+				return true;
+			}
+
+			if (content["code"].get<int>() != 0)
+			{
+				LOG_WARN(Utils::GetLogger(),
+					"Error response from /live_user/v1/Master/info' <Bililive>: " + content["msg"].get<string>());
+				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
+				return true;
+			}
+			if (content["data"]["info"]["uname"].get<string>().empty())
+			{
+				LOG_INFO(Utils::GetLogger(),
+					"用户不存在 <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
+				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该用户不存在捏"));
+				return true;
+			}
+			if (content["data"]["room_id"].get<long>() == 0)
+			{
+				LOG_INFO(Utils::GetLogger(),
+					"直播间不存在 <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
+				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该用户貌似暂未开通直播功能捏"));
+				return true;
+			}
+
+
 			long room_id = content["data"]["room_id"].get<long>();
 			string pic = content["data"]["info"]["face"].get<string>();
 			string name = content["data"]["info"]["uname"].get<string>();
@@ -239,6 +262,43 @@ bool Bililive::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bo
 				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该用户还不在名单里捏"));
 				return true;
 			}
+
+			auto result = cli.Get(
+				"/live_user/v1/Master/info", 
+				{{"uid", std::to_string(uid)}}, 
+				{
+					{"Accept-Encoding", "gzip, deflate"},
+					{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}
+				}
+			);
+
+			json content;
+			try
+			{
+				content = Utils::GetJsonResponse(result);
+			}
+			catch (const std::exception& e)
+			{
+				LOG_WARN(Utils::GetLogger(), "Request failed /live_user/v1/Master/info <Bililive>: " + string(e.what()));
+				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
+				return true;
+			}
+
+			if (content["code"].get<int>() != 0)
+			{
+				LOG_WARN(Utils::GetLogger(),
+					"Error response from /live_user/v1/Master/info' <Bililive>: " + content["msg"].get<string>());
+				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
+				return true;
+			}
+			if (content["data"]["info"]["uname"].get<string>().empty())
+			{
+				LOG_INFO(Utils::GetLogger(),
+					"用户不存在 <Bililive>: " + tokens[2] + Utils::GetDescription(gm.GetSender(), false));
+				client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该用户不存在捏"));
+				return true;
+			}
+
 			string pic = content["data"]["info"]["face"].get<string>();
 			string name = content["data"]["info"]["uname"].get<string>();
 

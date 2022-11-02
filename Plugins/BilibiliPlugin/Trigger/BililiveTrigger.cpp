@@ -43,139 +43,181 @@ void SetClientOptions(httplib::Client& cli)
 
 void BililiveTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils::BotConfig& config)
 {
-	std::map<uint64_t, std::pair<uint64_t, std::set<Mirai::GID_t>>> id_list; // room_id -> (uid, groups)
-	std::map<Mirai::GID_t, State::BililiveList> state_list;                  // group -> LiveList
-	auto group_list = groups.GetAllGroups();
-
-	for (const auto& p : group_list)
+	if (this->_streams.empty())
 	{
-		auto enabled = p->GetState<State::TriggerStatus>();
-		if (enabled->GetTriggerStatus(string(BililiveTrigger::_NAME_)))
+		std::map<uint64_t, std::pair<uint64_t, std::set<Mirai::GID_t>>> id_list;
+		auto group_list = groups.GetAllGroups();
+		for (const auto& p : group_list)
 		{
-			auto state = p->GetState<State::CustomState>();
-			auto bililist =
-				state->GetState(string(State::BililiveList::_NAME_), State::BililiveList{}).get<State::BililiveList>();
-			state_list.emplace(p->gid, bililist);
-			for (const auto& user : bililist.user_list)
+			auto TriggerStatus = p->GetState<State::TriggerStatus>();
+			if (TriggerStatus->GetTriggerStatus(string(BililiveTrigger::_NAME_)))
 			{
-				id_list[user.second.room_id].first = user.first;
-				id_list[user.second.room_id].second.insert(p->gid);
+				auto state = p->GetState<State::CustomState>();
+				auto bililist = state->GetState(
+					State::BililiveList::_NAME_.data(), 
+					State::BililiveList{}
+				).get<State::BililiveList>();
+
+				for (const auto& user : bililist.user_list)
+				{
+					id_list[user.second.room_id].first = user.first;
+					id_list[user.second.room_id].second.insert(p->gid);
+				}
 			}
 		}
+
+		for (auto&& [RoomId, value] : id_list)
+			this->_streams.emplace(RoomId, value.first, std::move(value.second));
+
+		if (this->_streams.empty())
+			return;
 	}
+
+	auto stream = std::move(this->_streams.front());
+	this->_streams.pop();
 
 	httplib::Client cli("https://api.live.bilibili.com");
 	SetClientOptions(cli);
 
-	// For each room
-	for (const auto& p : id_list)
+	// Room info
+	auto result = cli.Get(
+		"/room/v1/Room/get_info", 
+		{{"id", std::to_string(stream.RoomId)}},
+		{
+			{"Accept-Encoding", "gzip, deflate"},
+			{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}
+		}
+	);
+	if (!Utils::VerifyResponse(result))
 	{
-		uint64_t room_id = p.first;
-		uint64_t uid = p.second.first;
-		auto group_set = p.second.second;
+		LOG_WARN(Utils::GetLogger(),
+			"Request failed /room/v1/Room/get_info <BililiveTrigger>: "
+			+ (result ? httplib::to_string(result.error())
+			: ("Reason: " + result->reason + ", Body: " + result->body)));
+		return;
+	}
 
-		// Room info
-		auto result = cli.Get(
-			"/room/v1/Room/get_info", {{"id", std::to_string(room_id)}},
-			{{"Accept-Encoding", "gzip"},
-		     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
+	json content = json::parse(result->body);
+
+	if (content["code"].get<int>() != 0)
+	{
+		LOG_WARN(Utils::GetLogger(),
+			"Error response from /room/v1/Room/get_info <BililiveTrigger>: " + content["msg"].get<string>());
+		return;
+	}
+
+	std::map<Mirai::GID_t, State::CustomState*> StateList;
+	for (const Mirai::GID_t& gid : stream.groups)
+		StateList.emplace(gid, groups.GetGroup(gid).GetState<State::CustomState>());
+
+	// Is broadcasting
+	if (content["data"]["live_status"].get<int>() == 1)
+	{
+		bool AllBroadcasted = true;
+
+		for (const Mirai::GID_t& gid : stream.groups)
+		{
+			const auto& info = StateList.at(gid)->GetState(
+				State::BililiveList::_NAME_.data(), 
+				State::BililiveList{}
+			).get<State::BililiveList>().user_list.at(stream.uid);
+			if (!info.broadcasted)
+			{
+				AllBroadcasted = false;
+				break;
+			}
+		}
+		if (AllBroadcasted) 
+			return;
+
+		// Get live data and user data
+		string title = content["data"]["title"].get<string>();
+		string cover = content["data"]["user_cover"].get<string>();
+		string area = content["data"]["area_name"].get<string>();
+		result = cli.Get(
+			"/live_user/v1/Master/info", 
+			{{"uid", std::to_string(stream.uid)}},
+			{
+				{"Accept-Encoding", "gzip, deflate"},
+				{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}
+			}
+		);
 		if (!Utils::VerifyResponse(result))
 		{
 			LOG_WARN(Utils::GetLogger(),
-			         "Request failed /room/v1/Room/get_info <BililiveTrigger>: "
-			             + (result ? httplib::to_string(result.error())
-			                       : ("Reason: " + result->reason + ", Body: " + result->body)));
-			continue;
+				"Request failed /live_user/v1/Master/info <BililiveTrigger>: "
+				+ (result ? httplib::to_string(result.error())
+				: ("Reason: " + result->reason + ", Body: " + result->body)));
+			return;
 		}
 
-		json content = json::parse(result->body);
-
+		content = json::parse(result->body);
 		if (content["code"].get<int>() != 0)
 		{
 			LOG_WARN(Utils::GetLogger(),
-			         "Error response from /room/v1/Room/get_info <BililiveTrigger>: " + content["msg"].get<string>());
-			continue;
+					"Error response from /live_user/v1/Master/info <BililiveTrigger>: "
+					+ content["msg"].get<string>());
+			return;
 		}
 
-		// Is broadcasting
-		if (content["data"]["live_status"].get<int>() == 1)
+		string uname = content["data"]["info"]["uname"].get<string>();
+		string message = uname + " (" + std::to_string(stream.uid) + ") 正在直播: " + title;
+		Mirai::MessageChain msg = Mirai::MessageChain()
+					.Plain(message)
+					.Plain("\n分区: " + area + "\n")
+					.Image("", cover, "", "")
+					.Plain("\nhttps://live.bilibili.com/" + std::to_string(stream.RoomId));
+
+		for (const Mirai::GID_t& gid : stream.groups)
 		{
-			bool AllBroadcasted = true;
-			for (const Mirai::GID_t& gid : group_set)
-			{
-				State::BililiveList::info& info = state_list.at(gid).user_list.at(uid);
-				if (!info.broadcasted)
-				{
-					AllBroadcasted = false;
-					break;
-				}
-			}
-			if (AllBroadcasted) continue;
+			auto bililist = StateList.at(gid)->GetState(
+				State::BililiveList::_NAME_.data(), 
+				State::BililiveList{}
+			).get<State::BililiveList>();
 
-			// Get live data and user data
-			string title = content["data"]["title"].get<string>();
-			string cover = content["data"]["user_cover"].get<string>();
-			string area = content["data"]["area_name"].get<string>();
-			result = cli.Get(
-				"/live_user/v1/Master/info", {{"uid", std::to_string(uid)}},
-				{{"Accept-Encoding", "gzip"},
-			     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
-			if (!Utils::VerifyResponse(result))
+			auto& info = bililist.user_list.at(stream.uid);
+			if (!info.broadcasted)
 			{
-				LOG_WARN(Utils::GetLogger(),
-				         "Request failed /live_user/v1/Master/info <BililiveTrigger>: "
-				             + (result ? httplib::to_string(result.error())
-				                       : ("Reason: " + result->reason + ", Body: " + result->body)));
-				continue;
-			}
+				info.broadcasted = true;
+				StateList.at(gid)->SetState(
+					State::BililiveList::_NAME_.data(),
+					bililist
+				);
 
-			content = json::parse(result->body);
-			if (content["code"].get<int>() != 0)
-			{
-				LOG_WARN(Utils::GetLogger(),
-				         "Error response from /live_user/v1/Master/info <BililiveTrigger>: "
-				             + content["msg"].get<string>());
-				continue;
-			}
-			string uname = content["data"]["info"]["uname"].get<string>();
-			string message = uname + " (" + std::to_string(uid) + ") 正在直播: " + title;
-			Mirai::MessageChain msg = Mirai::MessageChain()
-										  .Plain(message)
-										  .Plain("\n分区: " + area + "\n")
-										  .Image("", cover, "", "")
-										  .Plain("\nhttps://live.bilibili.com/" + std::to_string(room_id));
-
-			for (const Mirai::GID_t& gid : group_set)
-			{
-				State::BililiveList::info& info = state_list.at(gid).user_list.at(uid);
-				if (!info.broadcasted)
-				{
-					info.broadcasted = true;
-					auto GroupInfo = client->GetGroupConfig(gid);
-					LOG_INFO(Utils::GetLogger(),
-					         "发送开播信息 <BililiveTrigger>: " + message + "\t-> " + GroupInfo.name + "("
-					             + gid.to_string() + ")");
-					client.SendGroupMessage(gid, msg);
-				}
+				auto GroupInfo = client->GetGroupConfig(gid);
+				LOG_INFO(Utils::GetLogger(),
+						"发送开播信息 <BililiveTrigger>: " + message + "\t-> " + GroupInfo.name + "("
+						+ gid.to_string() + ")");
+				client.SendGroupMessage(gid, msg);
 			}
 		}
-		else
+	}
+	else
+	{
+		for (const Mirai::GID_t& gid : stream.groups)
 		{
-			for (const Mirai::GID_t& gid : group_set)
+			auto bililist = StateList.at(gid)->GetState(
+				State::BililiveList::_NAME_.data(), 
+				State::BililiveList{}
+			).get<State::BililiveList>();
+			State::BililiveList::info& info = bililist.user_list.at(stream.uid);
+			if (info.broadcasted)
 			{
-				state_list.at(gid).user_list.at(uid).broadcasted = false;
+				info.broadcasted = false;
+				StateList.at(gid)->SetState(
+					State::BililiveList::_NAME_.data(),
+					bililist
+				);
 			}
 		}
-
-		std::this_thread::sleep_for(std::chrono::seconds(2));
 	}
 }
 
 time_t BililiveTrigger::GetNext()
 {
 	using namespace std::chrono;
-
-	constexpr auto interval = minutes(3);
+	using namespace std::literals;
+	constexpr auto interval = 20s;
 
 	return system_clock::to_time_t(system_clock::now() + interval);
 }
