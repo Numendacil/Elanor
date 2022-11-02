@@ -21,21 +21,6 @@ using std::vector;
 namespace GroupCommand
 {
 
-// bool SetTrigger::Parse(const Mirai::MessageChain& msg, vector<string>& tokens)
-// {
-// 	string str = Utils::GetText(msg);
-// 	Utils::ReplaceMark(str);
-// 	if (str.length() > std::char_traits<char>::length("#trig"))
-// 	{
-// 		if (Utils::Tokenize(tokens, str) < 2)
-// 			return true;
-// 		Utils::ToLower(tokens[0]);
-// 		if (tokens[0] == "#trig" || tokens[0] == "#trigger" || tokens[0] == "#触发器")
-// 			return true;
-// 	}
-// 	return true;
-// }
-
 bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot::Client& client,
                          Utils::BotConfig& config)
 {
@@ -50,6 +35,13 @@ bool SetTrigger::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, 
 
 
 	LOG_INFO(Utils::GetLogger(), "Calling SetTrigger <SetTrigger>" + Utils::GetDescription(gm.GetSender()));
+
+	if (!Utils::CheckAuth(gm.GetSender(), group, this->Permission()))
+	{
+		LOG_INFO(Utils::GetLogger(), "权限不足 <SetTrigger>" + Utils::GetDescription(gm.GetSender(), false));
+		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("权限不足捏～"));
+		return true;
+	}
 
 	command = Utils::toLower(tokens[1]);
 

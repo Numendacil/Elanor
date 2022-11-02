@@ -38,6 +38,13 @@ bool BlackList::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, B
 
 	LOG_INFO(Utils::GetLogger(), "Calling BlackList <BlackList>" + Utils::GetDescription(gm.GetSender()));
 
+	if (!Utils::CheckAuth(gm.GetSender(), group, this->Permission()))
+	{
+		LOG_INFO(Utils::GetLogger(), "权限不足 <BlackList>" + Utils::GetDescription(gm.GetSender(), false));
+		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("权限不足捏～"));
+		return true;
+	}
+
 	command = Utils::toLower(tokens[1]);
 	if (command == "help" || command == "h" || command == "帮助")
 	{

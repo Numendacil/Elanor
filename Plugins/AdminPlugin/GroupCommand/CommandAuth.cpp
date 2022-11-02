@@ -38,6 +38,14 @@ bool CommandAuth::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group,
 
 
 	LOG_INFO(Utils::GetLogger(), "Calling Auth <CommandAuth>" + Utils::GetDescription(gm.GetSender()));
+	
+	if (!Utils::CheckAuth(gm.GetSender(), group, this->Permission()))
+	{
+		LOG_INFO(Utils::GetLogger(), "权限不足 <CommandAuth>" + Utils::GetDescription(gm.GetSender(), false));
+		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("权限不足捏～"));
+		return true;
+	}
+
 
 	command = Utils::toLower(tokens[1]);
 
