@@ -199,7 +199,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 		}
 		else
 		{
-			std::filesystem::path cover_path = config.Get("/path/MediaFiles", "media_files/")
+			std::filesystem::path cover_path = config.Get("/path/MediaFiles", "MediaFiles")
 							/ std::filesystem::path("images/forbidden.png");
 			std::string cover;
 			{
@@ -255,7 +255,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 				if (bytes_count > MAX_BYTES_MEMORY)
 				{
 					std::string tmpfile = uuids::to_string(rng());
-					std::filesystem::path tmp_path = config.Get("/path/MediaFiles", "media_files/")
+					std::filesystem::path tmp_path = config.Get("/path/MediaFiles", "MediaFiles")
 								/ std::filesystem::path("tmp") / tmpfile;
 					std::ofstream ofile(tmp_path);
 					try
@@ -298,7 +298,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 		else
 		{
 			
-			std::filesystem::path cover_path = config.Get("/path/MediaFiles", "media_files/")
+			std::filesystem::path cover_path = config.Get("/path/MediaFiles", "MediaFiles")
 							/ std::filesystem::path("images/forbidden.png");
 			std::string cover;
 			{
@@ -339,7 +339,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 				if (bytes_count > MAX_BYTES_MEMORY)
 				{
 					std::string tmpfile = uuids::to_string(rng());
-					std::filesystem::path tmp_path = config.Get("/path/MediaFiles", "media_files/")
+					std::filesystem::path tmp_path = config.Get("/path/MediaFiles", "MediaFiles")
 								/ std::filesystem::path("tmp") / tmpfile;
 					std::ofstream ofile(tmp_path);
 

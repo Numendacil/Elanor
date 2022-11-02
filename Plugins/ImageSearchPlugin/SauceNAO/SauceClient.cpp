@@ -105,7 +105,6 @@ SauceNAOResult SauceClient::SearchUrl(std::string url)
 	);
 
 	json resp = Utils::GetJsonResponse(result);
-	std::cout << resp << std::endl;
 	int status = resp.at("header").at("status").get<int>();
 	if (status < 0)
 		throw SauceNAOError(resp.at("header").at("message").get<string>(), status);

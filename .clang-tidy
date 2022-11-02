@@ -2,6 +2,7 @@
 Checks: -'bugprone-*, clang-diagnostic-*, clang-analyzer-*, cppcoreguidelines-*, modernize-*,
           -cppcoreguidelines-non-private-member-variables-in-classes, -cppcoreguidelines-macro-usage,
           -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+          -cppcoreguidelines-pro-type-reinterpret-cast,
           -modernize-use-trailing-return-type, -modernize-use-nodiscard, readability-*'
 WarningsAsErrors: true
 HeaderFilterRegex: ''

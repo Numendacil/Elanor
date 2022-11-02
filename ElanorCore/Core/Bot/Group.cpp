@@ -72,7 +72,8 @@ void Group::ToFile(const std::filesystem::path& filepath) const
 			LOG_WARN(Utils::GetLogger(), "Failed to open file " + string(filepath) + " for writing");
 			return;
 		}
-		LOG_INFO(Utils::GetLogger(), "Writing to file " + string(filepath));
+		
+		LOG_DEBUG(Utils::GetLogger(), "Writing to file " + string(filepath));
 		file << content.dump(1, '\t');
 	}
 }
@@ -97,7 +98,8 @@ void Group::FromFile(const std::filesystem::path& filepath)
 		LOG_WARN(Utils::GetLogger(), "Failed to parse file " + string(filepath) + " :" + e.what());
 		return;
 	}
-	LOG_INFO(Utils::GetLogger(), "Reading from file " + string(filepath));
+
+	LOG_DEBUG(Utils::GetLogger(), "Reading from file " + string(filepath));
 	{
 		std::lock_guard<std::mutex> lk(this->_mtx_state);
 		if (content.contains("States"))

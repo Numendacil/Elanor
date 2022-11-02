@@ -71,8 +71,8 @@ protected:
 	}
 
 public:
-	explicit PixivClient(std::string token, std::string proxy_host = {}, int proxy_port = -1) : 
-	_RefreshToken(std::move(token)), _ProxyHost(std::move(proxy_host)), _ProxyPort(proxy_port),
+	explicit PixivClient(std::string token, std::string ProxyHost = {}, int ProxyPort = -1) : 
+	_RefreshToken(std::move(token)), _ProxyHost(std::move(ProxyHost)), _ProxyPort(ProxyPort),
 	_OauthCli(oauth_hosts.data()), _ApiCli(api_hosts.data()), _DownloadCli(download_hosts.data())
 	{
 		this->_InitClients();

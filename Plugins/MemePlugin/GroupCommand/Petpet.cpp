@@ -97,7 +97,7 @@ bool Petpet::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 	if (!Utils::trim(str).empty() && Utils::trim(str)[0] != '#') return false;
 
 	vector<string> tokens;
-	if (Utils::Tokenize(str, tokens) < 2) return false;
+	if (Utils::Tokenize(str, tokens) < 1) return false;
 
 	string command = Utils::toLower(tokens[0]);
 	if (command != "#pet" && command !=  "#petpet" && command != "#摸摸") return false;
@@ -136,6 +136,7 @@ bool Petpet::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 			LOG_INFO(Utils::GetLogger(),
 					"无效参数[QQ] <Petpet>: " + tokens[1] + Utils::GetDescription(gm.GetSender(), false));
 			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain(tokens[1] + "是个锤子QQ号"));
+			return true;
 		}
 		target = (Mirai::QQ_t)id;
 	}
@@ -175,7 +176,7 @@ bool Petpet::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 	size_t len{};
 	unsigned char* out = GeneratePetpet(
 		result->body, 
-		config.Get("/path/MediaFiles", std::filesystem::path("media_files")) / std::filesystem::path("images/petpet"), 
+		config.Get("/path/MediaFiles", "MediaFiles") / std::filesystem::path("images/petpet"), 
 		len
 	);
 	

@@ -35,23 +35,16 @@ json CustomState::Serialize()
 	std::lock_guard<std::mutex> lk(this->_mtx);
 	json content;
 	for (const auto& p : this->_states)
-	{
-		json data;
-		data["id"] = p.first;
-		data["state"] = p.second;
-		content += data;
-	}
+		content[p.first] = p.second;
 	return content;
 }
 
 void CustomState::Deserialize(const json& content)
 {
 	std::lock_guard<std::mutex> lk(this->_mtx);
-	assert(content.is_array());
-	for (const auto& p : content)
-	{
-		this->_states.try_emplace(p.at("id").get<std::string>(), p.at("state"));
-	}
+	assert(content.is_object());
+	for (const auto& p : content.items())
+		this->_states.emplace(p.key(), p.value());
 }
 
 } // namespace State

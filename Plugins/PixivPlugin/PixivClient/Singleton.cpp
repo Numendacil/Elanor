@@ -10,17 +10,17 @@
 namespace Pixiv
 {
 
-std::shared_ptr<PixivClient> GetClient(std::string token, std::string proxy_host, int proxy_port)
+std::shared_ptr<PixivClient> GetClient(std::string token, std::string ProxyHost, int ProxyPort)
 {
 	static std::mutex mtx;
 	static std::tuple<std::string, std::string, int> config;
 	static std::shared_ptr<PixivClient> client;
 
 	std::lock_guard<std::mutex> lk(mtx);
-	if (!client || config != std::tie(token, proxy_host, proxy_port))
+	if (!client || config != std::tie(token, ProxyHost, ProxyPort))
 	{
-		config = std::make_tuple(token, proxy_host, proxy_port);
-		client = std::make_shared<PixivClient>(std::move(token), std::move(proxy_host), proxy_port);
+		config = std::make_tuple(token, ProxyHost, ProxyPort);
+		client = std::make_shared<PixivClient>(std::move(token), std::move(ProxyHost), ProxyPort);
 		LOG_DEBUG(Utils::GetLogger(), "New PixivClient generated <PixivClient>");
 	}
 	return client;
