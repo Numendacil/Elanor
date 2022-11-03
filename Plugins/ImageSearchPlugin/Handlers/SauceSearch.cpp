@@ -15,6 +15,7 @@
 #include <httplib.h>
 
 #include <Core/States/CoolDown.hpp>
+#include "libmirai/Types/MediaTypes.hpp"
 
 using std::string;
 
@@ -41,10 +42,10 @@ auto CensorImage(const std::string& image, double sigma, size_t& len, const std:
 			VImage::option()->set("x", (in.width() - top.width()) / 2)->set("y", (in.height() - top.height()) / 2));
 	}
 
-	unsigned char* buffer = nullptr;
+	char* buffer = nullptr;
 	// NOLINTNEXTLINE(*-reinterpret-cast)
 	in.write_to_buffer(".jpg", reinterpret_cast<void**>(&buffer), &len);
-	return std::unique_ptr<unsigned char, std::function<void(unsigned char*)>>(buffer, [](auto* p) { VIPS_FREE(p); });
+	return std::unique_ptr<char, std::function<void(char*)>>(buffer, [](auto* p) { VIPS_FREE(p); });
 }
 
 // string CropAndConvert(const std::string& image)
@@ -207,7 +208,7 @@ void SearchSauce(std::string url, const Mirai::GroupMessageEvent& gm, Bot::Group
 	/////////////////////
 
 	auto best_sauce = result.results[0];
-	string thumbnail;
+	Mirai::GroupImage thumbnail;
 	try
 	{
 		Utils::UrlComponent comp = Utils::UrlComponent::ParseUrl(best_sauce.header.thumbnail);
@@ -226,16 +227,15 @@ void SearchSauce(std::string url, const Mirai::GroupMessageEvent& gm, Bot::Group
 
 		LOG_INFO(Utils::GetLogger(), "Finish downloading thumbnail <SearchSauce>");
 
-		thumbnail = std::move(result->body);
-
 		if (best_sauce.header.hidden)
 		{
 			size_t len{};
-			auto out = CensorImage(thumbnail, 0.04 * 150, len); // NOLINT(*-avoid-magic-numbers)
-			thumbnail = Utils::b64encode(out.get(), len);
+			auto out = CensorImage(result->body, 0.04 * 150, len); // NOLINT(*-avoid-magic-numbers)
+			string{}.swap(result->body);
+			thumbnail = client->UploadGroupImage({out.get(), len});
 		}
 		else
-			thumbnail = Utils::b64encode(thumbnail);
+			thumbnail = client->UploadGroupImage(std::move(result->body));
 	}
 	catch (const std::exception& e)
 	{
@@ -254,7 +254,7 @@ void SearchSauce(std::string url, const Mirai::GroupMessageEvent& gm, Bot::Group
 	LOG_INFO(Utils::GetLogger(), "上传结果 <SearchSauce>" + Utils::GetDescription(gm.GetSender(), false));
 	client.SendGroupMessage(group.gid, Mirai::MessageChain()
 		.Plain(std::move(msg))
-		.Image("", "", "", std::move(thumbnail))
+		.Image(std::move(thumbnail))
 	);
 }
 

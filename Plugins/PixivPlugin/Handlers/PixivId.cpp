@@ -286,7 +286,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 		auto msg = Mirai::MessageChain().Plain(std::move(message));
 		if (illust.x_restrict == X_RESTRICT::SAFE)
 		{
-			msg += Mirai::ImageMessage({}, {}, {}, Utils::b64encode(image));
+			msg += Mirai::ImageMessage(client->UploadGroupImage(std::move(image)));
 		}
 		else
 		{
@@ -310,11 +310,12 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 					* std::max(illust.width, illust.height);
 
 			auto out = ImageUtils::CensorImage(image, sigma, len, cover);
-			msg += Mirai::ImageMessage({}, {}, {}, Utils::b64encode(out.get(), len));
+			msg += Mirai::ImageMessage(client->UploadGroupImage({out.get(), len}));
 		}
 		
 		LOG_INFO(Utils::GetLogger(), "上传结果 <Pixiv Id>" + Utils::GetDescription(gm.GetSender(), false));
 		client.SendGroupMessage(group.gid, msg);
+		return;
 	}
 	else
 	{
@@ -348,7 +349,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 					return;
 				}
 				node.SetTimestamp(std::time(nullptr));
-				node.SetMessageChain(Mirai::MessageChain().Image(client->UploadGroupImage(image)));
+				node.SetMessageChain(Mirai::MessageChain().Image(client->UploadGroupImage(std::move(image))));
 				msg.emplace_back(node);
 			}
 		}
@@ -403,7 +404,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 				auto out = ImageUtils::CensorImage(image, sigma, len, cover);
 				string{}.swap(image);
 
-				task.write(string{reinterpret_cast<const char*>(out.get()), len});
+				task.write(string{out.get(), len});
 				task.CheckException();
 			}
 		}

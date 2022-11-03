@@ -89,7 +89,7 @@ bool Choyen::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 
 	std::string module = config.Get("/path/pymodules", "pymodules") + ".5000choyen";
 	vector<string> cmd{
-		"python", "-m", std::move(module),
+		"python", "-m", module,
 		string(upper), string(lower) 
 	};
 	if (UpperRainbow)
@@ -117,7 +117,7 @@ bool Choyen::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 	}
 	
 	LOG_INFO(Utils::GetLogger(), "上传图片 <Choyen>" + Utils::GetDescription(gm.GetSender(), false));
-	client.SendGroupMessage(group.gid, Mirai::MessageChain().Image("", "", "", Utils::b64encode(output)));
+	client.SendGroupMessage(group.gid, Mirai::MessageChain().Image(client->UploadGroupImage(std::move(output))));
 	return true;
 }
 

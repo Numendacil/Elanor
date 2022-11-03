@@ -195,9 +195,9 @@ json PixivClient::SearchUser(string name, uint64_t offset)
 	AddMiscHeaders(headers);
 	
 	httplib::Params params{
-		{"word", std::move(name)}, 
 		{"filter", "for_android"}
 	};
+	params.emplace("word", std::move(name));
 	if (offset > 0)
 		params.emplace("offset", std::to_string(offset));
 
@@ -541,11 +541,11 @@ json PixivClient::SearchIllust(std::string keyword, SearchOption option, SortOrd
 	AddMiscHeaders(headers);
 	
 	httplib::Params params{
-		{"word", std::move(keyword)}, 
 		{"search_target", to_string(option)},
 		{"sort", to_string(sort)},
 		{"filter", "for_android"}
 	};
+	params.emplace("word", std::move(keyword));
 	if (MergePlainKeywordResult)
 		params.emplace("merge_plain_keyword_results", "true");
 	if (duration != SearchDuration::UNKNOWN)
@@ -688,11 +688,11 @@ json PixivClient::SearchNovel(std::string keyword, SearchOption option, SortOrde
 	AddMiscHeaders(headers);
 	
 	httplib::Params params{
-		{"word", std::move(keyword)}, 
 		{"search_target", to_string(option)},
 		{"sort", to_string(sort)},
 		{"filter", "for_android"}
 	};
+	params.emplace("word", std::move(keyword));
 	if (MergePlainKeywordResult)
 		params.emplace("merge_plain_keyword_results", "true");
 	if (duration != SearchDuration::UNKNOWN)
@@ -746,9 +746,8 @@ json PixivClient::AutoComplete(string keyword, bool MergePlainKeywordResult)
 	httplib::Headers headers{{"Authorization", "Bearer " + token}};
 	AddMiscHeaders(headers);
 	
-	httplib::Params params{
-		{"word", std::move(keyword)}
-	};
+	httplib::Params params;
+	params.emplace("word", std::move(keyword));
 	if (MergePlainKeywordResult)
 		params.emplace("merge_plain_keyword_results", "true");
 

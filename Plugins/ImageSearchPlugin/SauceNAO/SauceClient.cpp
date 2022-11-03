@@ -51,9 +51,8 @@ SauceNAOResult SauceClient::SearchFile(std::string content, std::string filename
 	else
 		params.emplace("dbmask", std::to_string(this->_mask));
 
-	httplib::MultipartFormDataItems payload{
-		{"file", std::move(content), std::move(filename), "application/octet-stream"}
-	};
+	httplib::MultipartFormDataItems payload;
+	payload.emplace_back("file", std::move(content), std::move(filename), "application/octet-stream");
 
 	auto result = this->_cli.Post(
 		"/search.php?" + Utils::Params2Query(params),
@@ -92,8 +91,8 @@ SauceNAOResult SauceClient::SearchUrl(std::string url)
 		{"hide",  std::to_string(this->_hide)},
 		{"minsim", std::to_string(this->_MinSimilarity)},
 		{"dedupe", std::to_string(this->_dedupe)},
-		{"url", std::move(url)}
 	};
+	params.emplace("url", std::move(url));
 	if (this->_mask == MASK_ALL)
 		params.emplace("db", "999");
 	else

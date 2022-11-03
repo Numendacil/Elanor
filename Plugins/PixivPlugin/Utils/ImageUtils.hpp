@@ -26,10 +26,10 @@ inline auto CensorImage(const std::string& image, double sigma, size_t& len, con
 			VImage::option()->set("x", (in.width() - top.width()) / 2)->set("y", (in.height() - top.height()) / 2));
 	}
 
-	unsigned char* buffer = nullptr;
+	char* buffer = nullptr;
 	// NOLINTNEXTLINE(*-reinterpret-cast)
 	in.write_to_buffer(".jpg", reinterpret_cast<void**>(&buffer), &len);
-	return std::unique_ptr<unsigned char, std::function<void(unsigned char*)>>(buffer, [](auto* p) { VIPS_FREE(p); });
+	return std::unique_ptr<char, std::function<void(char*)>>(buffer, [](auto* p) { VIPS_FREE(p); });
 }
 
 } // namespace Pixiv::ImageUtils

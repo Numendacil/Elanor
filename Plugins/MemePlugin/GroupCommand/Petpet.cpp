@@ -34,7 +34,7 @@ namespace GroupCommand
 namespace
 {
 
-unsigned char* GeneratePetpet(const std::string& avatar, std::filesystem::path folder, size_t& len)
+auto GeneratePetpet(const std::string& avatar, std::filesystem::path folder, size_t& len)
 {
 	using namespace vips;
 
@@ -77,7 +77,7 @@ unsigned char* GeneratePetpet(const std::string& avatar, std::filesystem::path f
 	result.set("delay", std::vector<int>(FRAME, DELAY));
 	result.set("page-height", SIZE);
 
-	unsigned char* buffer = nullptr;
+	char* buffer = nullptr;
 	// NOLINTNEXTLINE(*-reinterpret-cast)
 	result.write_to_buffer(".gif", reinterpret_cast<void**>(&buffer), &len,
 		VImage::option()
@@ -85,7 +85,7 @@ unsigned char* GeneratePetpet(const std::string& avatar, std::filesystem::path f
 		->set("optimize_gif_transparency", true)
 		->set("optimize_gif_frames", true)
 	);
-	return buffer;
+	return std::unique_ptr<char, std::function<void(char*)>>(buffer, [](auto* p) { VIPS_FREE(p); });
 }
 
 }
@@ -174,15 +174,16 @@ bool Petpet::Execute(const Mirai::GroupMessageEvent& gm, Bot::Group& group, Bot:
 	}
 
 	size_t len{};
-	unsigned char* out = GeneratePetpet(
+	auto out = GeneratePetpet(
 		result->body, 
 		config.Get("/path/MediaFiles", "MediaFiles") / std::filesystem::path("images/petpet"), 
 		len
 	);
 	
 	LOG_INFO(Utils::GetLogger(), "上传图片 <Petpet>" + Utils::GetDescription(gm.GetSender(), false));
-	client.SendGroupMessage(group.gid, Mirai::MessageChain().Image("", "", "", Utils::b64encode(out, len)));
-	VIPS_FREE(out);
+	client.SendGroupMessage(group.gid, Mirai::MessageChain().Image(
+		client->UploadGroupImage({out.get(), len})
+	));
 	return true;
 }
 
