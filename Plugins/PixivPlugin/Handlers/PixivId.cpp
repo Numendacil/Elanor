@@ -338,101 +338,92 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 		TaskQueue<std::string> task(MAX_PAYLOAD);
 
 		std::thread th([&node, &msg, &task, &client]{
-		try
-		{
-			while (true)
+			try
 			{
-				auto [image, success] = task.read();
-				if (!success) 
+				while (true)
 				{
-					task.SetException(std::make_exception_ptr(std::runtime_error("Failed to read task")));
-					return;
+					auto [image, success] = task.read();
+					if (!success) 
+					{
+						// task.SetException(std::make_exception_ptr(std::runtime_error("Failed to read task")));
+						return;
+					}
+					node.SetTimestamp(std::time(nullptr));
+					node.SetMessageChain(Mirai::MessageChain().Image(client->UploadGroupImage(std::move(image))));
+					msg.emplace_back(node);
 				}
-				node.SetTimestamp(std::time(nullptr));
-				node.SetMessageChain(Mirai::MessageChain().Image(client->UploadGroupImage(std::move(image))));
-				msg.emplace_back(node);
 			}
-		}
-		catch (...)
-		{
-			task.SetException(std::current_exception());
-			return;
-		}
+			catch (...)
+			{
+				task.SetException(std::current_exception());
+				return;
+			}
 		});
 
-	try
-	{
-		if (illust.x_restrict == X_RESTRICT::SAFE)
+		try
 		{
-			for (size_t i = 0; i < urls.size(); i++)
+			Utils::RunAtExit guard([&task, &th]()
 			{
-				const std::string& url = urls[i];
-				LOG_INFO(Utils::GetLogger(), "Downloading " + std::to_string(i + 1) + "/" + std::to_string(urls.size()));
+				task.stop();
+				if (th.joinable())
+					th.join();
+			});
 
-				task.write(pclient->DownloadIllust(url));
-				task.CheckException();
+			if (illust.x_restrict == X_RESTRICT::SAFE)
+			{
+				for (size_t i = 0; i < urls.size(); i++)
+				{
+					const std::string& url = urls[i];
+					LOG_INFO(Utils::GetLogger(), "Downloading " + std::to_string(i + 1) + "/" + std::to_string(urls.size()));
+
+					task.write(pclient->DownloadIllust(url));
+					task.CheckException();
+				}
 			}
+			else
+			{
+				
+				std::filesystem::path cover_path = config.Get("/path/MediaFiles", "MediaFiles")
+								/ std::filesystem::path("images/forbidden.png");
+				std::string cover;
+				{
+					std::ifstream ifile(cover_path);
+
+					constexpr size_t BUFFER_SIZE = 4096;
+					char buffer[BUFFER_SIZE];	// NOLINT(*-avoid-c-arrays)
+					while (ifile.read(buffer, sizeof(buffer)))
+						cover.append(buffer, sizeof(buffer));
+					cover.append(buffer, ifile.gcount());
+				}
+
+				for (size_t i = 0; i < urls.size(); i++)
+				{
+					const std::string& url = urls[i];
+					LOG_INFO(Utils::GetLogger(), "Downloading " + std::to_string(i + 1) + "/" + std::to_string(urls.size()));
+
+					std::string image = pclient->DownloadIllust(url);
+
+					constexpr double R18_RATIO = 0.05, R18G_RATIO = 0.15;
+					double sigma = (illust.x_restrict == X_RESTRICT::R18 ? R18_RATIO : R18G_RATIO) 
+							* std::max(illust.width, illust.height);
+
+					size_t len{};
+					auto out = ImageUtils::CensorImage(image, sigma, len, cover);
+					string{}.swap(image);
+
+					task.write(string{out.get(), len});
+					task.CheckException();
+				}
+			}
+			task.wait();
+			task.CheckException();
 		}
-		else
+		catch(const std::exception& e)
 		{
-			
-			std::filesystem::path cover_path = config.Get("/path/MediaFiles", "MediaFiles")
-							/ std::filesystem::path("images/forbidden.png");
-			std::string cover;
-			{
-				std::ifstream ifile(cover_path);
-
-				constexpr size_t BUFFER_SIZE = 4096;
-				char buffer[BUFFER_SIZE];	// NOLINT(*-avoid-c-arrays)
-				while (ifile.read(buffer, sizeof(buffer)))
-					cover.append(buffer, sizeof(buffer));
-				cover.append(buffer, ifile.gcount());
-			}
-
-			for (size_t i = 0; i < urls.size(); i++)
-			{
-				const std::string& url = urls[i];
-				LOG_INFO(Utils::GetLogger(), "Downloading " + std::to_string(i + 1) + "/" + std::to_string(urls.size()));
-
-				std::string image = pclient->DownloadIllust(url);
-
-				constexpr double R18_RATIO = 0.05, R18G_RATIO = 0.15;
-				double sigma = (illust.x_restrict == X_RESTRICT::R18 ? R18_RATIO : R18G_RATIO) 
-						* std::max(illust.width, illust.height);
-
-				size_t len{};
-				auto out = ImageUtils::CensorImage(image, sigma, len, cover);
-				string{}.swap(image);
-
-				task.write(string{out.get(), len});
-				task.CheckException();
-			}
+			LOG_WARN(Utils::GetLogger(),"Error occured while downloading image <Pixiv Id>: " + string(e.what()));
+			client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
+			return;
 		}
-		task.wait();
-		task.CheckException();
-	}
-	catch(const std::exception& e)
-	{
-		task.stop();
-		if (th.joinable())
-			th.join();
-		LOG_WARN(Utils::GetLogger(),"Error occured while downloading image <Pixiv Id>: " + string(e.what()));
-		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
-		return;
-	}
-	catch(...)
-	{
-		task.stop();
-		if (th.joinable())
-			th.join();
-
-		throw;
-	}
-
-
-		task.stop();
-		if (th.joinable())
-			th.join();
 	
 		LOG_INFO(Utils::GetLogger(), "上传结果 <Pixiv Id>" + Utils::GetDescription(gm.GetSender(), false));
 		client.SendGroupMessage(group.gid, Mirai::MessageChain().Forward(std::move(msg)));

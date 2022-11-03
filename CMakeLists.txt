@@ -5,6 +5,8 @@ project(ElanorBot LANGUAGES CXX VERSION 1.0.0)
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install library in the current directory" FORCE)
 
 add_compile_definitions(MIRAI_LOGGING_LEVEL=1)
+# add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+# add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 
 # UnitTests
 option(ELANOR_BUILD_UNIT_TESTS "Build UnitTests" ON)

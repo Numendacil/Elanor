@@ -15,6 +15,9 @@ extern "C"
 	void InitPlugin() 
 	{
 		VIPS_INIT("");		// NOLINT(*-vararg)
+
+		constexpr size_t MAX_MEM = 1024 * 1024 * 10;
+		vips_cache_set_max_mem(MAX_MEM);
 	}
 
 

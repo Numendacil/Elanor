@@ -2,6 +2,7 @@
 #define _UTILS_COMMON_HPP_
 
 #include <algorithm>
+#include <functional>
 #include <optional>
 #include <random>
 
@@ -183,6 +184,23 @@ inline bool HasValue(const nlohmann::json& j, KeyType&& key)
 {
 	return !(!j.is_object() || !j.contains(key) || j.at(key).is_null());
 }
+
+struct RunAtExit
+{
+private:
+	std::function<void()> _func;
+public:
+	RunAtExit(std::function<void()> func) : _func(std::move(func)) {}
+	RunAtExit(const RunAtExit&) = delete;
+	RunAtExit& operator=(const RunAtExit&) = delete;
+	RunAtExit(RunAtExit&&) noexcept = default;
+	RunAtExit& operator=(RunAtExit&&) noexcept = default;
+	~RunAtExit()
+	{
+		if (this->_func)
+			this->_func();
+	}
+};
 
 } // namespace Utils
 
