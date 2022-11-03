@@ -52,7 +52,7 @@ SauceNAOResult SauceClient::SearchFile(std::string content, std::string filename
 		params.emplace("dbmask", std::to_string(this->_mask));
 
 	httplib::MultipartFormDataItems payload;
-	payload.emplace_back("file", std::move(content), std::move(filename), "application/octet-stream");
+	payload.emplace_back(httplib::MultipartFormData{"file", std::move(content), std::move(filename), "application/octet-stream"});
 
 	auto result = this->_cli.Post(
 		"/search.php?" + Utils::Params2Query(params),
