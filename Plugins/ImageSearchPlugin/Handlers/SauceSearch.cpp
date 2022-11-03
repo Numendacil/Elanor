@@ -107,9 +107,12 @@ void SearchSauce(std::string url, const Mirai::GroupMessageEvent& gm, Bot::Group
 
 		auto result = cli.Get(
 			comp.GetRelativeRef(),
-			{{"Accept", "*/*"},
-		     {"Accept-Encoding", "gzip, deflate"},
-		     {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}});
+			{	
+				{"Accept", "*/*"},
+				{"Accept-Encoding", "gzip, deflate"},
+				{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"}
+			}
+		);
 		if (!Utils::VerifyResponse(result)) throw Utils::NetworkException(result);
 
 		LOG_INFO(Utils::GetLogger(), "Finish downloading target <SearchSauce>");

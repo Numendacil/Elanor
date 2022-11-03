@@ -1,10 +1,14 @@
 #include "PixivId.hpp"
 
 #include <charconv>
+#include <condition_variable>
 #include <cstdint>
 #include <exception>
 #include <filesystem>
 #include <fstream>
+#include <mutex>
+#include <queue>
+#include <stdexcept>
 #include <string>
 
 #include <PixivClient/Models.hpp>
@@ -33,6 +37,93 @@ using namespace std::literals;
 
 namespace Pixiv::PixivId
 {
+
+namespace 
+{
+
+template <typename T>
+class TaskQueue
+{
+private:
+	const size_t _MaxPayload;
+	std::queue<T> _payloads;
+	bool _stop = false;
+	std::exception_ptr _ep;
+
+	std::mutex _mtx;
+	std::condition_variable _cv;
+
+public:
+	TaskQueue(size_t MaxPayload = -1) : _MaxPayload(MaxPayload) {}
+
+	template <typename... Args>
+	void write(Args&&... args)
+	{
+		std::unique_lock<std::mutex> lk(this->_mtx);
+		this->_cv.wait(lk, 
+			[this]{ 
+				return this->_payloads.size() < this->_MaxPayload || this->_stop; 
+			}
+		);
+		if (this->_stop) return;
+		this->_payloads.emplace(std::forward<Args>(args)...);
+		this->_cv.notify_all();
+	}
+
+	std::pair<T, bool> read()
+	{
+		std::unique_lock<std::mutex> lk(this->_mtx);
+		
+		this->_cv.wait(lk, 
+			[this]{ 
+				return !this->_payloads.empty() || this->_stop; 
+			}
+		);
+		if (this->_stop)
+		{
+			return {{}, false};
+		}
+
+		auto payload = std::move(this->_payloads.front());
+		this->_payloads.pop();
+		this->_cv.notify_all();
+		return {payload, true};
+	}
+
+	void wait()
+	{
+		std::unique_lock<std::mutex> lk(this->_mtx);
+		this->_cv.wait(lk, 
+			[this]{ 
+				return this->_payloads.empty() || this->_stop;
+			}
+		);
+	}
+
+	void stop()
+	{
+		std::unique_lock<std::mutex> lk(this->_mtx);
+		this->_stop = true;
+		this->_cv.notify_all();
+	}
+
+	void SetException(std::exception_ptr ep)
+	{
+		std::unique_lock<std::mutex> lk(this->_mtx);
+		this->_ep = ep;
+		this->_stop = true;
+		this->_cv.notify_all();
+	}
+
+	void CheckException()
+	{
+		std::unique_lock<std::mutex> lk(this->_mtx);
+		if (this->_ep)
+			std::rethrow_exception(this->_ep);
+	}
+};
+
+}
 
 void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageEvent& gm, Bot::Group& group,
                    Bot::Client& client, Utils::BotConfig& config)
@@ -240,10 +331,36 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 		node.SetMessageChain(Mirai::MessageChain().Plain(std::move(message)));
 		msg.emplace_back(node);
 
-		constexpr size_t MAX_BYTES_MEMORY = 1024 * 1024 * 10;
-		size_t bytes_count = 0;
-		uuids::basic_uuid_random_generator rng(Utils::GetRngEngine());
-		
+		bool success = false;
+
+		constexpr size_t MAX_PAYLOAD = 5;
+		TaskQueue<std::string> task(MAX_PAYLOAD);
+
+		std::thread th([&node, &msg, &task, &client]{
+		try
+		{
+			while (true)
+			{
+				auto [image, success] = task.read();
+				if (!success) 
+				{
+					task.SetException(std::make_exception_ptr(std::runtime_error("Failed to read task")));
+					return;
+				}
+				node.SetTimestamp(std::time(nullptr));
+				node.SetMessageChain(Mirai::MessageChain().Image(client->UploadGroupImage(image)));
+				msg.emplace_back(node);
+			}
+		}
+		catch (...)
+		{
+			task.SetException(std::current_exception());
+			return;
+		}
+		});
+
+	try
+	{
 		if (illust.x_restrict == X_RESTRICT::SAFE)
 		{
 			for (size_t i = 0; i < urls.size(); i++)
@@ -251,48 +368,8 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 				const std::string& url = urls[i];
 				LOG_INFO(Utils::GetLogger(), "Downloading " + std::to_string(i + 1) + "/" + std::to_string(urls.size()));
 
-				node.SetTimestamp(std::time(nullptr));
-				if (bytes_count > MAX_BYTES_MEMORY)
-				{
-					std::string tmpfile = uuids::to_string(rng());
-					std::filesystem::path tmp_path = config.Get("/path/MediaFiles", "MediaFiles")
-								/ std::filesystem::path("tmp") / tmpfile;
-					std::ofstream ofile(tmp_path);
-					try
-					{
-						pclient->DownloadIllust(url, 
-						[&ofile](const char* data, size_t len)
-						{
-							ofile.write(data, len);		// NOLINT(*-narrowing-conversions)
-							return true;
-						}
-						);
-					}
-					catch(const std::exception& e)
-					{
-						LOG_WARN(Utils::GetLogger(),"Error occured while downloading image <Pixiv Id>: " + string(e.what()));
-						client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
-						return;
-					}
-					node.SetMessageChain(Mirai::MessageChain().Image("", "", tmp_path, ""));
-				}
-				else
-				{	
-					std::string image;
-					try
-					{
-						image = pclient->DownloadIllust(url);
-					}
-					catch(const std::exception& e)
-					{
-						LOG_WARN(Utils::GetLogger(),"Error occured while downloading image <Pixiv Id>: " + string(e.what()));
-						client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
-						return;
-					}
-					bytes_count += image.size();
-					node.SetMessageChain(Mirai::MessageChain().Image("", "", "", Utils::b64encode(image)));
-				}
-				msg.emplace_back(node);
+				task.write(pclient->DownloadIllust(url));
+				task.CheckException();
 			}
 		}
 		else
@@ -316,18 +393,7 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 				const std::string& url = urls[i];
 				LOG_INFO(Utils::GetLogger(), "Downloading " + std::to_string(i + 1) + "/" + std::to_string(urls.size()));
 
-				std::string image;
-				node.SetTimestamp(std::time(nullptr));
-				try
-				{
-					image = pclient->DownloadIllust(url);
-				}
-				catch(const std::exception& e)
-				{
-					LOG_WARN(Utils::GetLogger(),"Error occured while downloading image <Pixiv Id>: " + string(e.what()));
-					client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
-					return;
-				}
+				std::string image = pclient->DownloadIllust(url);
 
 				constexpr double R18_RATIO = 0.05, R18G_RATIO = 0.15;
 				double sigma = (illust.x_restrict == X_RESTRICT::R18 ? R18_RATIO : R18G_RATIO) 
@@ -335,25 +401,37 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 
 				size_t len{};
 				auto out = ImageUtils::CensorImage(image, sigma, len, cover);
+				string{}.swap(image);
 
-				if (bytes_count > MAX_BYTES_MEMORY)
-				{
-					std::string tmpfile = uuids::to_string(rng());
-					std::filesystem::path tmp_path = config.Get("/path/MediaFiles", "MediaFiles")
-								/ std::filesystem::path("tmp") / tmpfile;
-					std::ofstream ofile(tmp_path);
-
-					ofile.write(reinterpret_cast<char *>(out.get()), len);	// NOLINT
-					node.SetMessageChain(Mirai::MessageChain().Image("", "", tmp_path, ""));
-				}
-				else
-				{
-					bytes_count += len;
-					node.SetMessageChain(Mirai::MessageChain().Image("", "", "", Utils::b64encode(out.get(), len)));
-				}
-				msg.emplace_back(node);
+				task.write(string{reinterpret_cast<const char*>(out.get()), len});
+				task.CheckException();
 			}
 		}
+		task.wait();
+		task.CheckException();
+	}
+	catch(const std::exception& e)
+	{
+		task.stop();
+		if (th.joinable())
+			th.join();
+		LOG_WARN(Utils::GetLogger(),"Error occured while downloading image <Pixiv Id>: " + string(e.what()));
+		client.SendGroupMessage(group.gid, Mirai::MessageChain().Plain("该服务寄了捏，怎么会事捏"));
+		return;
+	}
+	catch(...)
+	{
+		task.stop();
+		if (th.joinable())
+			th.join();
+
+		throw;
+	}
+
+
+		task.stop();
+		if (th.joinable())
+			th.join();
 	
 		LOG_INFO(Utils::GetLogger(), "上传结果 <Pixiv Id>" + Utils::GetDescription(gm.GetSender(), false));
 		client.SendGroupMessage(group.gid, Mirai::MessageChain().Forward(std::move(msg)));
