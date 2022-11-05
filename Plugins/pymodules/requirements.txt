@@ -1,0 +1,3 @@
+numpy==1.23.4
+Pillow==9.3.0
+UnityPy==1.9.20

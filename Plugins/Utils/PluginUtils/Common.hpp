@@ -2,9 +2,11 @@
 #define _UTILS_COMMON_HPP_
 
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <optional>
 #include <random>
+#include <thread>
 
 #include <nlohmann/json.hpp>
 #include <sys/wait.h>
@@ -183,6 +185,25 @@ template<typename KeyType>
 inline bool HasValue(const nlohmann::json& j, KeyType&& key)
 {
 	return !(!j.is_object() || !j.contains(key) || j.at(key).is_null());
+}
+
+template <typename Callable>
+auto RunWithRetry(Callable&& func, size_t retry = 3, std::chrono::milliseconds interval = std::chrono::seconds(1))
+{
+	try
+	{
+		return func();
+	}
+	catch(...)
+	{
+		if (retry)
+		{
+			retry--;
+			std::this_thread::sleep_for(interval);
+		}
+		else
+			throw;
+	}
 }
 
 struct RunAtExit

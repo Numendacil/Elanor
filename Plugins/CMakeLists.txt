@@ -42,6 +42,9 @@ endif()
 
 target_link_libraries(PluginProperties INTERFACE ${CMAKE_PROJECT_NAME}::ElanorCore)
 
+# For building shared libs
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 function(add_plugin plugin_name)
 	add_library(${plugin_name} SHARED)
 
@@ -67,6 +70,7 @@ add_subdirectory(CommonPlugin)
 add_subdirectory(ImageSearchPlugin)
 add_subdirectory(MemePlugin)
 add_subdirectory(PixivPlugin)
+add_subdirectory(SekaiPlugin)
 
 install(
 	DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/pymodules"

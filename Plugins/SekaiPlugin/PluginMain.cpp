@@ -1,0 +1,107 @@
+#include <PluginUtils/TypeList.hpp>
+
+#include <Trigger/SekaiUpdateTrigger.hpp>
+
+#include <vips/vips8>
+
+#define PLUGIN_ENTRY_IMPL
+#include <Core/Interface/PluginEntry.hpp>
+
+using GroupCommandList = Utils::TypeList< >;
+using TriggerList = Utils::TypeList< Trigger::SekaiUpdateTrigger >;
+
+extern "C"
+{
+
+	void InitPlugin() 
+	{
+		VIPS_INIT("");		// NOLINT(*-vararg)
+
+		constexpr size_t MAX_MEM = 1024 * 1024 * 10;
+		vips_cache_set_max_mem(MAX_MEM);
+	}
+
+
+	const char* GetPluginName()
+	{
+		return "SekaiPlugin";
+	}
+
+	const char* GetPluginInfo()
+	{
+		return "Plugin for Project Sekai related functions";
+	}
+
+
+	size_t GetGroupCommandCount()
+	{
+		return GroupCommandList::size;
+	}
+
+	const char* GetGroupCommandName(size_t idx)
+	{
+		const char* name = "";
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (name = GroupCommandList::At<Is>::type::_NAME_.data(), true) : false) || ...);
+		}
+		(std::make_integer_sequence<size_t, GroupCommandList::size>{});
+
+		return name;
+	}
+
+	GroupCommand::IGroupCommand* GetGroupCommand(size_t idx)
+	{
+		GroupCommand::IGroupCommand* command = nullptr;
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (command = new GroupCommandList::At_t<Is>, true) : false)|| ...); // NOLINT(cppcoreguidelines-owning-memory)
+		}
+		(std::make_integer_sequence<size_t, GroupCommandList::size>{});
+
+		return command;
+	}
+
+	void DeleteGroupCommand(GroupCommand::IGroupCommand* cmd)
+	{
+		delete cmd; // NOLINT(cppcoreguidelines-owning-memory)
+	}
+
+
+	size_t GetTriggerCount()
+	{
+		return TriggerList::size;
+	}
+
+	const char* GetTriggerName(size_t idx)
+	{
+		const char* name = "";
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (name = TriggerList::At<Is>::type::_NAME_.data(), true) : false) || ...);
+		}
+		(std::make_integer_sequence<size_t, TriggerList::size>{});
+
+		return name;
+	}
+
+	Trigger::ITrigger* GetTrigger(size_t idx)
+	{
+		Trigger::ITrigger* trigger = nullptr;
+		[&]<size_t... Is>(std::integer_sequence<size_t, Is...> const&)
+		{
+			(void)((idx == Is ? (trigger = new TriggerList::At_t<Is>, true) : false) || ...); // NOLINT(cppcoreguidelines-owning-memory)
+		}
+		(std::make_integer_sequence<size_t, TriggerList::size>{});
+
+		return trigger;
+	}
+
+	void DeleteTrigger(Trigger::ITrigger* trigger)
+	{
+		delete trigger; // NOLINT(cppcoreguidelines-owning-memory)
+	}
+
+
+	void ClosePlugin() {}
+}
