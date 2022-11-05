@@ -32,6 +32,26 @@ inline auto CensorImage(const std::string& image, double sigma, size_t& len, con
 	return std::unique_ptr<char, std::function<void(char*)>>(buffer, [](auto* p) { VIPS_FREE(p); });
 }
 
+constexpr size_t THUMBNAIL_SIZE = 960;
+
+std::string CropAndConvert(const std::string& image)
+{
+	using namespace vips;
+	VImage in = VImage::thumbnail_buffer(vips_blob_new(nullptr, image.data(), image.size()), THUMBNAIL_SIZE, 
+		VImage::option()
+		->set("size", VipsSize::VIPS_SIZE_DOWN)
+		->set("no_rotate", true)
+	);
+
+	char* buffer = nullptr;
+	size_t len{};
+	// NOLINTNEXTLINE(*-reinterpret-cast)
+	in.write_to_buffer(".jpg", reinterpret_cast<void**>(&buffer), &len);
+	auto p = std::unique_ptr<char, std::function<void(char*)>>
+		(buffer, [](auto* p) { VIPS_FREE(p); });
+	return {p.get(), len};
+}
+
 } // namespace Pixiv::ImageUtils
 
 #endif

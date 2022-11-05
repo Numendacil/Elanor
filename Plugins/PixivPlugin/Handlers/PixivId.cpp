@@ -307,7 +307,8 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 
 			constexpr double R18_RATIO = 0.05, R18G_RATIO = 0.15;
 			double sigma = (illust.x_restrict == X_RESTRICT::R18 ? R18_RATIO : R18G_RATIO) 
-					* std::max(illust.width, illust.height);
+					* ImageUtils::THUMBNAIL_SIZE;
+			image = ImageUtils::CropAndConvert(image);
 
 			auto out = ImageUtils::CensorImage(image, sigma, len, cover);
 			msg += Mirai::ImageMessage(client->UploadGroupImage({out.get(), len}));
@@ -405,7 +406,8 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 
 					constexpr double R18_RATIO = 0.05, R18G_RATIO = 0.15;
 					double sigma = (illust.x_restrict == X_RESTRICT::R18 ? R18_RATIO : R18G_RATIO) 
-							* std::max(illust.width, illust.height);
+							* ImageUtils::THUMBNAIL_SIZE;
+					image = ImageUtils::CropAndConvert(image);
 
 					size_t len{};
 					auto out = ImageUtils::CensorImage(image, sigma, len, cover);
