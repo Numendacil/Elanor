@@ -27,6 +27,7 @@ protected:
 	// const uint64_t _HCAKey;
 	const size_t _PoolSize;
 	const std::string _PyModule;
+	const std::string _ApiUrl;
 	const std::vector<std::string> _AssetFilter;
 
 	mutable std::shared_mutex _mtx;
@@ -42,6 +43,7 @@ public:
 		std::string PythonModule,
 		std::vector<std::string> filter,
 		std::string AESKey, std::string AESIV, 
+		std::string ApiUrl,
 		// uint64_t HCAKey,
 		size_t PoolSize = 4,
 		std::string ProxyHost = {}, int ProxyPort = -1

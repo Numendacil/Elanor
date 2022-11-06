@@ -191,15 +191,8 @@ void GetIllustById(const std::vector<string>& tokens, const Mirai::GroupMessageE
 	// Pixiv Api
 	//////////////////
 
-	std::shared_ptr<PixivClient> pclient;
-	if (config.IsNull("/pixiv/proxy"))
-		pclient = GetClient(config.Get("/pixiv/token", ""));
-	else
-		pclient = GetClient(
-			config.Get("/pixiv/token", ""), 
-			config.Get("/pixiv/proxy/host", config.Get("/proxy/host", "")), 
-			config.Get("/pixiv/proxy/port", config.Get("/proxy/port", -1))
-		);
+	auto pclient = Pixiv::GetClient(config);
+
 	Illust illust;
 	try
 	{

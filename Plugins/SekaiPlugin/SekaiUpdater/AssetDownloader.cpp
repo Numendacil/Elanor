@@ -18,19 +18,19 @@ namespace AssetUpdater
 {
 
 AssetDownloader::AssetDownloader(
-	std::size_t pool_size, 
-	std::filesystem::path url_prefix,
-	std::filesystem::path path_prefix,
+	std::size_t PoolSize, 
+	std::string ApiUrl,
+	std::filesystem::path UrlPrefix,
+	std::filesystem::path PathPrefix,
 	std::string cookie,
-	string AssetbundleHostHash,
 	TaskDispatcher* dispatcher
 )
-: _url_prefix(std::move(url_prefix)), _path_prefix(std::move(path_prefix)), 
-  _cookie(std::move(cookie)), _AssetbundleHostHash(std::move(AssetbundleHostHash)),
+: _UrlPrefix(std::move(UrlPrefix)), _PathPrefix(std::move(PathPrefix)), 
+  _ApiUrl(std::move(ApiUrl)), _cookie(std::move(cookie)),
   _dispatcher(dispatcher)
 {
-	this->_workers.reserve(pool_size);
-	for (std::size_t i = 0; i < pool_size; i++)
+	this->_workers.reserve(PoolSize);
+	for (std::size_t i = 0; i < PoolSize; i++)
 	{
 		_workers.emplace_back([this]() { this->_loop(); });
 	}
@@ -77,9 +77,7 @@ string GetTimestamp()
 
 void AssetDownloader::_loop()
 {
-	httplib::Client cli(
-		"https://production-" + this->_AssetbundleHostHash + "-assetbundle.sekai.colorfulpalette.org"
-	);
+	httplib::Client cli(this->_ApiUrl);
 	cli.set_default_headers(httplib::Headers{
 		{"Accept", "*/*"},
 		{"Cookie", this->_cookie},
@@ -112,13 +110,13 @@ void AssetDownloader::_loop()
 	
 	try
 	{
-		const auto unpack_folder = this->_path_prefix / key;
-		const auto final_folder = this->_path_prefix / (key + "_rip");
+		const auto unpack_folder = this->_PathPrefix / key;
+		const auto final_folder = this->_PathPrefix / (key + "_rip");
 		filesystem::remove_all(unpack_folder);
 		filesystem::remove_all(final_folder);
 		
-		auto filepath = this->_path_prefix / (key + ".pack");
-		string url = this->_url_prefix / key;
+		auto filepath = this->_PathPrefix / (key + ".pack");
+		string url = this->_UrlPrefix / key;
 		filesystem::create_directories(filepath.parent_path());
 
 		Utils::RunWithRetry([&]

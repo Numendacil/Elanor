@@ -22,7 +22,7 @@ protected:
 	std::queue<std::string> _workloads;
 
 	const std::string _pymodule;
-	const std::filesystem::path _path_prefix;
+	const std::filesystem::path _PathPrefix;
 
 	bool _stop = false;
 
@@ -32,9 +32,9 @@ protected:
 
 public:
 	AssetUnpacker(
-		std::size_t pool_size, 
+		std::size_t PoolSize, 
 		std::string pymodule,
-		std::filesystem::path path_prefix,
+		std::filesystem::path PathPrefix,
 		TaskDispatcher* dispatcher
 	);
 

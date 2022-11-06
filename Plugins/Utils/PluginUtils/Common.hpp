@@ -188,7 +188,7 @@ inline bool HasValue(const nlohmann::json& j, KeyType&& key)
 }
 
 template <typename Callable>
-auto RunWithRetry(Callable&& func, size_t retry = 3, std::chrono::milliseconds interval = std::chrono::seconds(1))
+inline auto RunWithRetry(Callable&& func, size_t retry = 3, std::chrono::milliseconds interval = std::chrono::seconds(1))
 {
 	try
 	{

@@ -40,6 +40,7 @@ SekaiClient::SekaiClient(
 	std::string PythonModule,
 	std::vector<std::string> filter,
 	std::string AESKey, std::string AESIV, 
+	std::string ApiUrl,
 	// uint64_t HCAKey,
 	size_t PoolSize,
 	std::string ProxyHost, int ProxyPort
@@ -47,6 +48,7 @@ SekaiClient::SekaiClient(
 : _AssetFolder(std::move(AssetFolder)), 
   _TmpFolder(std::move(TemporaryFolder)),
   _UpdaterPath(std::move(UpdaterPath)),
+  _ApiUrl(std::move(ApiUrl)),
   /*_HCAKey(HCAKey),*/ _PoolSize(PoolSize), 
   _PyModule(std::move(PythonModule)),
   _AssetFilter(std::move(filter))
@@ -108,6 +110,7 @@ SekaiClient::SekaiClient(
 
 	this->_cli = std::make_unique<SekaiNetworkClient>(
 		std::move(AESKey), std::move(AESIV), 
+		this->_ApiUrl,
 		std::move(ProxyHost), ProxyPort,
 		std::move(AppVersion),
 		std::move(AppHash),
@@ -159,7 +162,7 @@ void SekaiClient::_UpdateMasterDB() const
 	// 	ofile << version.dump(1, '\t');
 	// }
 
-	std::this_thread::sleep_for(1s);
+	// std::this_thread::sleep_for(1s);
 
 	{
 		LOG_DEBUG(Utils::GetLogger(), "Loading Asset list");
@@ -168,7 +171,7 @@ void SekaiClient::_UpdateMasterDB() const
 		ofile << assets.dump();
 	}
 
-	std::this_thread::sleep_for(3s);
+	// std::this_thread::sleep_for(3s);
 
 	{
 		LOG_DEBUG(Utils::GetLogger(), "Loading Master suite");
@@ -209,6 +212,7 @@ void SekaiClient::_UpdateAssets() const
 	std::vector<string> cmd{
 		this->_UpdaterPath, 
 		this->_AssetFolder, this->_PyModule,
+		this->_ApiUrl,
 		/*std::to_string(this->_HCAKey),*/ std::to_string(this->_PoolSize)
 	};
 	cmd.insert(cmd.end(), this->_AssetFilter.begin(), this->_AssetFilter.end());

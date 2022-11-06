@@ -23,7 +23,7 @@ class AcbDecoder
 	std::queue<std::string> _workloads;
 
 	bool _stop = false;
-	const std::filesystem::path _path_prefix;
+	const std::filesystem::path _PathPrefix;
 	// const uint64_t _decrypt_key{};
 
 	void _loop();
@@ -32,8 +32,8 @@ class AcbDecoder
 
 public:
 	AcbDecoder(
-		std::size_t pool_size, 
-		std::filesystem::path path_prefix,
+		std::size_t PoolSize, 
+		std::filesystem::path PathPrefix,
 		// uint64_t decrypt_key,
 		TaskDispatcher* dispatcher
 	);

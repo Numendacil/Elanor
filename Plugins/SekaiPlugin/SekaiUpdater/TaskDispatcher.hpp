@@ -63,10 +63,10 @@ public:
 	TaskDispatcher(
 		size_t PoolSize, 
 		std::string pymodule,
+		std::string ApiUrl,
 		std::filesystem::path UrlPrefix,
 		std::filesystem::path PathPrefix,
-		std::string cookie,
-		std::string AssetbundleHostHash
+		std::string cookie
 	);
 
 	TaskDispatcher(const TaskDispatcher&) = delete;

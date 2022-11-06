@@ -53,7 +53,7 @@ struct AssetMeta
 
 int main(int argc, char** argv)
 {
-	if (argc < 4)
+	if (argc < 5)
 	{
 		LOGGING("Not enough arguments");
 		return 1;
@@ -64,19 +64,20 @@ try
 	// Read commandline args
 	const filesystem::path AssetFolder(argv[1]);
 	string pymodule(argv[2]);
+	string APiUrl(argv[3]);
 
 	size_t PoolSize{};
-	if (!Utils::Str2Num(argv[3], PoolSize))
+	if (!Utils::Str2Num(argv[4], PoolSize))
 	{
-		LOGGING("argument 3 is not an unsigned number: " + string(argv[4]));
+		LOGGING("argument 4 is not an unsigned number: " + string(argv[4]));
 		return 1;
 	}
 
 	std::vector<std::regex> filter;
-	if (argc > 4)
+	if (argc > 5)
 	{
-		filter.reserve(argc - 4);
-		for (int i = 4; i < argc; i++)
+		filter.reserve(argc - 5);
+		for (int i = 5; i < argc; i++)
 			filter.emplace_back(argv[i], std::regex_constants::ECMAScript);
 	}
 
@@ -149,40 +150,25 @@ try
 		AssetBundles = AssetBundles.at("bundles");
 	}
 
-
-	// Read file hash info and prepare files for output
-	std::map<std::string, AssetMeta> AssetInfo;
-	const filesystem::path meta_file = AssetFolder / "AssetInfo.json";
-	{
-		std::ifstream ifile(meta_file);
-		if (ifile)
-			AssetInfo = json::parse(ifile).get<decltype(AssetInfo)>();
-	}
-
-	const filesystem::path update_file = AssetFolder / "updates.txt";
-	std::ofstream UpdateFile(update_file);
-
-
 	LOGGING("Requesting cookie...");
 
 	// Obtain cookies for api
 	string cookie;
 	{
-		httplib::Client cli("https://issue.sekai.colorfulpalette.org");
+		httplib::Client cli(APiUrl);
 
 		cli.set_connection_timeout(10);		// NOLINT(*-avoid-magic-numbers)
 		cli.set_write_timeout(10);		// NOLINT(*-avoid-magic-numbers)
 		cli.set_read_timeout(120);		// NOLINT(*-avoid-magic-numbers)
 
 		cli.set_default_headers({
-			// {"Host", "issue.sekai.colorfulpalette.org"},
 			{"Accept", "*/*"},
 			{"Accept-Encoding", "deflate, gzip"},
 			{"Accept-Language", "en-US,en;q=0.9"},
 			{"User-Agent", "ProductName/94 CFNetwork/1335.0.3 Darwin/21.6.0"}
 		});
 	
-		auto result = cli.Post("/api/signature");
+		auto result = cli.Post("/issue/api/signature");
 		if (!Utils::VerifyResponse(result))
 		{
 			LOGGING("Failed to obtain cookie: " + 
@@ -209,15 +195,28 @@ try
 		}
 	}
 
+	// Read file hash info and prepare files for output
+	std::map<std::string, AssetMeta> AssetInfo;
+	const filesystem::path meta_file = AssetFolder / "AssetInfo.json";
+	{
+		std::ifstream ifile(meta_file);
+		if (ifile)
+			AssetInfo = json::parse(ifile).get<decltype(AssetInfo)>();
+	}
+
+	const filesystem::path update_file = AssetFolder / "updates.txt";
+	std::ofstream UpdateFile(update_file);
+
+	
 	LOGGING("Update started");
 
 	AssetUpdater::TaskDispatcher dispatcher(
 		PoolSize, 
 		std::move(pymodule), 
-		"/" + AssetVersion + "/" + AssetHash + "/" + AppOS,
+		std::move(APiUrl),
+		"/assetbundle/" + AssetBundleHash + "/" + AssetVersion + "/" + AssetHash + "/" + AppOS,
 		AssetFolder / "assets",
-		std::move(cookie), 
-		std::move(AssetBundleHash)
+		std::move(cookie)
 	);
 
 

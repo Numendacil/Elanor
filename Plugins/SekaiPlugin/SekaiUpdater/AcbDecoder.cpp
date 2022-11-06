@@ -26,15 +26,15 @@ namespace AssetUpdater
 {
 
 AcbDecoder::AcbDecoder(
-	std::size_t pool_size, 
-	std::filesystem::path path_prefix,
+	std::size_t PoolSize, 
+	std::filesystem::path PathPrefix,
 	// uint64_t decrypt_key,
 	TaskDispatcher* dispatcher
 )
-: _path_prefix(std::move(path_prefix)), /*_decrypt_key(decrypt_key),*/ _dispatcher(dispatcher)
+: _PathPrefix(std::move(PathPrefix)), /*_decrypt_key(decrypt_key),*/ _dispatcher(dispatcher)
 {
-	this->_workers.reserve(pool_size);
-	for (std::size_t i = 0; i < pool_size; i++)
+	this->_workers.reserve(PoolSize);
+	for (std::size_t i = 0; i < PoolSize; i++)
 	{
 		_workers.emplace_back([this]() { this->_loop(); });
 	}
@@ -80,7 +80,7 @@ void AcbDecoder::_loop()
 		}
 	try
 	{
-		auto output_folder = this->_path_prefix / key;
+		auto output_folder = this->_PathPrefix / key;
 		for (const auto& extracted: filesystem::recursive_directory_iterator(output_folder))
 		{
 			if(!extracted.is_regular_file())

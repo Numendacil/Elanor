@@ -88,18 +88,7 @@ Mirai::MessageChain GetUpdatedCards(Sekai::SekaiClient& SekaiCli, Bot::Client& c
 
 void SekaiUpdateTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils::BotConfig& config)
 {
-	auto SekaiCli = Sekai::GetClient(
-		config.Get("/path/MediaFiles", "MediaFiles") / std::filesystem::path("pjsk"), 
-		config.Get("/path/MediaFiles", "MediaFiles") / std::filesystem::path("tmp"), 
-		config.Get("/sekai/UpdaterPath", "SekaiUpdater"), 
-		config.Get("/path/pymodules", "pymodules") + ".sekai-extract", 
-		config.Get("/sekai/filter", std::vector<std::string>{}), 
-		config.Get("/sekai/AESKey", ""), 
-		config.Get("/sekai/AESIV", ""),
-		config.Get("/sekai/PoolSize", 4),
-		config.IsNull("/sekai/proxy") ? "" : config.Get("/sekai/proxy/host", config.Get("/sekai/host", "")), 
-		config.IsNull("/sekai/proxy") ? -1 : config.Get("/sekai/proxy/port", config.Get("/sekai/port", -1))
-	);
+	auto SekaiCli = Sekai::GetClient(config);
 
 	std::vector<string> UpdatedContents;
 	try

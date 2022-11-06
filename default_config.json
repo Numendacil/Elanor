@@ -25,5 +25,17 @@
 	{
 		"token": "",
 		"proxy": null
+	},
+
+	"sekai":
+	{
+		"AssetFolder": "SekaiAssets",
+		"UpdaterPath": "SekaiUpdater",
+		"filter": [],
+		"AESKey": "",
+		"AESIV": "",
+		"api": "",
+		"PoolSize": 4,
+		"proxy": null
 	}
 }

@@ -21,9 +21,7 @@ namespace Sekai
 class SekaiNetworkClient
 {
 protected:
-	httplib::Client _ApiCli;
-	httplib::Client _CookieCli;
-	httplib::Client _GameVersionCli;
+	httplib::Client _cli;
 
 	const std::string _AESKey;
 	const std::string _AESIV;
@@ -83,6 +81,7 @@ protected:
 public:
 	explicit SekaiNetworkClient(
 		std::string key, std::string iv, 
+		const std::string& ApiUrl,
 		std::string proxy_host = {}, int proxy_port = -1,
 		std::string AppVersion = "2.3.5",
 		std::string AppHash = "cc22bebb-bce8-1744-2543-16a166dd220d",

@@ -17,6 +17,7 @@ std::shared_ptr<SekaiClient> GetClient(
 	std::string PythonModule,
 	std::vector<std::string> filter,
 	std::string AESKey, std::string AESIV,
+	std::string ApiUrl,
 	size_t PoolSize,
 	std::string ProxyHost, int ProxyPort
 )
@@ -63,6 +64,7 @@ std::shared_ptr<SekaiClient> GetClient(
 			std::move(PythonModule),
 			std::move(filter),
 			std::move(AESKey), std::move(AESIV), 
+			std::move(ApiUrl),
 			PoolSize,
 			std::move(ProxyHost), ProxyPort);
 		LOG_DEBUG(Utils::GetLogger(), "New SekaiClient generated <SekaiClient>");

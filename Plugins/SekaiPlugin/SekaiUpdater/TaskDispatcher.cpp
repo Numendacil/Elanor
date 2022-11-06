@@ -25,14 +25,14 @@ namespace AssetUpdater
 TaskDispatcher::TaskDispatcher(
 	size_t PoolSize, 
 	string pymodule,
+	string ApiUrl,
 	filesystem::path UrlPrefix,
 	filesystem::path PathPrefix,
-	string cookie,
-	string AssetbundleHostHash
+	string cookie
 ): _PathPrefix(std::move(PathPrefix))
 {
 	this->_downloader = std::make_unique<AssetDownloader>(
-		PoolSize, std::move(UrlPrefix), this->_PathPrefix, std::move(cookie), std::move(AssetbundleHostHash), this
+		PoolSize, std::move(ApiUrl), std::move(UrlPrefix), this->_PathPrefix, std::move(cookie), this
 	);
 	this->_unpacker = std::make_unique<AssetUnpacker>(
 		PoolSize, std::move(pymodule), this->_PathPrefix, this

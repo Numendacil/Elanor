@@ -19,15 +19,15 @@ namespace AssetUpdater
 {
 
 AssetUnpacker::AssetUnpacker(
-	std::size_t pool_size, 
+	std::size_t PoolSize, 
 	string pymodule,
-	std::filesystem::path path_prefix,
+	std::filesystem::path PathPrefix,
 	TaskDispatcher* dispatcher
 )
-: _pymodule(std::move(pymodule)), _path_prefix(std::move(path_prefix)), _dispatcher(dispatcher)
+: _pymodule(std::move(pymodule)), _PathPrefix(std::move(PathPrefix)), _dispatcher(dispatcher)
 {
-	this->_workers.reserve(pool_size);
-	for (std::size_t i = 0; i < pool_size; i++)
+	this->_workers.reserve(PoolSize);
+	for (std::size_t i = 0; i < PoolSize; i++)
 	{
 		_workers.emplace_back([this]() { this->_loop(); });
 	}
@@ -234,13 +234,13 @@ void AssetUnpacker::_loop()
 			this->_workloads.pop();
 		}
 
-		filesystem::remove_all(this->_path_prefix / key);
-		filesystem::remove_all(this->_path_prefix / (key + "_rip"));
-		filesystem::create_directories(this->_path_prefix / key);
+		filesystem::remove_all(this->_PathPrefix / key);
+		filesystem::remove_all(this->_PathPrefix / (key + "_rip"));
+		filesystem::create_directories(this->_PathPrefix / key);
 		pipe.write("start");
 		pipe.write(key);
-		pipe.write(this->_path_prefix);
-		pipe.write(this->_path_prefix / (key + ".pack"));
+		pipe.write(this->_PathPrefix);
+		pipe.write(this->_PathPrefix / (key + ".pack"));
 		pipe.write("finish");
 
 		string result = pipe.read();

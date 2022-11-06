@@ -22,10 +22,10 @@ protected:
 	std::queue<std::string> _workloads;
 
 	bool _stop = false;
-	const std::filesystem::path _url_prefix;
-	const std::filesystem::path _path_prefix;
+	const std::filesystem::path _UrlPrefix;
+	const std::filesystem::path _PathPrefix;
 	const std::string _cookie;
-	const std::string _AssetbundleHostHash;
+	const std::string _ApiUrl;
 
 	void _loop();
 
@@ -33,11 +33,11 @@ protected:
 
 public:
 	AssetDownloader(
-		std::size_t pool_size, 
-		std::filesystem::path url_prefix,
-		std::filesystem::path path_prefix,
+		std::size_t PoolSize, 
+		std::string ApiUrl,
+		std::filesystem::path UrlPrefix,
+		std::filesystem::path PathPrefix,
 		std::string cookie,
-		std::string AssetbundleHostHash,
 		TaskDispatcher* dispatcher
 	);
 
