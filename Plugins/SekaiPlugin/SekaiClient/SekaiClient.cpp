@@ -320,7 +320,10 @@ std::vector<string> SekaiClient::UpdateContents() const
 	string DataVersionNew;
 	json version;
 	{
-		version = this->_cli->GetVersionInfo();
+		Utils::RunWithRetry([&]{
+			version = this->_cli->GetVersionInfo();
+		});
+
 		for (const auto& obj : version.at("appVersions"))
 		{
 			if (obj.at("appVersionStatus").get<string>() == "available")
@@ -338,7 +341,9 @@ std::vector<string> SekaiClient::UpdateContents() const
 	if (DataVersion != DataVersionNew)
 	{
 		LOG_INFO(Utils::GetLogger(), "Found new data version: " + DataVersion + " -> " + DataVersionNew);
-		this->_UpdateMasterDB();
+		Utils::RunWithRetry([&]{
+			this->_UpdateMasterDB();
+		});
 
 		{
 			const filesystem::path version_info = this->_AssetFolder / "database/versions.json";

@@ -41,6 +41,9 @@ void MorningTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils::
 time_t MorningTrigger::GetNext()
 {
 	static const auto crontab = cron::make_cron("0 0 7 * * *");
+	
+	constexpr auto INTERVAL = std::chrono::seconds(5);
+	std::this_thread::sleep_for(INTERVAL);
 	return cron::cron_next(crontab, std::time(nullptr));
 }
 

@@ -165,10 +165,10 @@ SekaiNetworkClient::SekaiNetworkClient(
 	{
 		this->_cli.set_proxy(this->_ProxyHost, this->_ProxyPort);
 	}
-	else
-	{
-		this->_cli.set_keep_alive(true);
-	}
+	// else
+	// {
+	// 	this->_cli.set_keep_alive(true);
+	// }
 
 	this->_cli.set_connection_timeout(300); // NOLINT(*-avoid-magic-numbers)
 	this->_cli.set_write_timeout(300); // NOLINT(*-avoid-magic-numbers)

@@ -88,6 +88,8 @@ Mirai::MessageChain GetUpdatedCards(Sekai::SekaiClient& SekaiCli, Bot::Client& c
 
 void SekaiUpdateTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Utils::BotConfig& config)
 {
+	LOG_DEBUG(Utils::GetLogger(), "SekaiUpdate started");
+
 	auto SekaiCli = Sekai::GetClient(config);
 
 	std::vector<string> UpdatedContents;
@@ -133,13 +135,14 @@ void SekaiUpdateTrigger::Action(Bot::GroupList& groups, Bot::Client& client, Uti
 		client->SendGroupMessage(gid, versions);
 		client->SendGroupMessage(gid, cards);
 	}
-
-	
 }
 
 time_t SekaiUpdateTrigger::GetNext()
 {
 	static const auto crontab = cron::make_cron("1 1/10 * * * *");
+	
+	constexpr auto INTERVAL = std::chrono::seconds(5);
+	std::this_thread::sleep_for(INTERVAL);
 	return cron::cron_next(crontab, std::time(nullptr));
 }
 
