@@ -15,19 +15,20 @@
 
 #include <models/BasicTypes.hpp>
 
+
 namespace Sekai
 {
 
 class SekaiNetworkClient
 {
 protected:
-	httplib::Client _cli;
-
 	const std::string _AESKey;
 	const std::string _AESIV;
 
 	const std::string _ProxyHost;
 	const int _ProxyPort;
+
+	const std::string _ApiUrl;
 
 	std::string _AppVersion;
 	std::string _AppHash;
@@ -37,6 +38,8 @@ protected:
 	std::string _AssetBundleHostHash;
 
 	mutable std::mutex _mtx;
+
+	httplib::Client _GetClient() const;
 
 	/* Utilities */
 
@@ -81,7 +84,7 @@ protected:
 public:
 	explicit SekaiNetworkClient(
 		std::string key, std::string iv, 
-		const std::string& ApiUrl,
+		std::string ApiUrl,
 		std::string proxy_host = {}, int proxy_port = -1,
 		std::string AppVersion = "2.3.5",
 		std::string AppHash = "cc22bebb-bce8-1744-2543-16a166dd220d",

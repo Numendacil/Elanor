@@ -142,7 +142,7 @@ constexpr auto X_UNITY_VERSION = "2020.3.32f1";
 
 SekaiNetworkClient::SekaiNetworkClient(
 	string key, string iv, 
-	const string& ApiUrl,
+	string ApiUrl,
 	string proxy_host, int proxy_port,
 	string AppVersion, 
 	string AppHash, 
@@ -151,8 +151,8 @@ SekaiNetworkClient::SekaiNetworkClient(
 	string DataVersion,
 	string AssetBundleHostHash
 ) 
-: _cli(ApiUrl),		// reverse proxy by cloudflare workers
-  _AESKey(std::move(key)), _AESIV(std::move(iv)),
+: _AESKey(std::move(key)), _AESIV(std::move(iv)),
+  _ApiUrl(std::move(ApiUrl)),
   _ProxyHost(std::move(proxy_host)), _ProxyPort(proxy_port),
   _AppVersion(std::move(AppVersion)), 
   _AppHash(std::move(AppHash)), 
@@ -161,20 +161,21 @@ SekaiNetworkClient::SekaiNetworkClient(
   _DataVersion(std::move(DataVersion)),
   _AssetBundleHostHash(std::move(AssetBundleHostHash))
 {
+}
+
+httplib::Client SekaiNetworkClient::_GetClient() const
+{
+	httplib::Client cli(this->_ApiUrl);
 	if (!this->_ProxyHost.empty() && this->_ProxyPort > 0)
 	{
-		this->_cli.set_proxy(this->_ProxyHost, this->_ProxyPort);
+		cli.set_proxy(this->_ProxyHost, this->_ProxyPort);
 	}
-	// else
-	// {
-	// 	this->_cli.set_keep_alive(true);
-	// }
 
-	this->_cli.set_connection_timeout(300); // NOLINT(*-avoid-magic-numbers)
-	this->_cli.set_write_timeout(300); // NOLINT(*-avoid-magic-numbers)
-	this->_cli.set_read_timeout(300); // NOLINT(*-avoid-magic-numbers)
+	cli.set_connection_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	cli.set_write_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	cli.set_read_timeout(120); // NOLINT(*-avoid-magic-numbers)
 
-	this->_cli.set_default_headers({
+	cli.set_default_headers({
 		{"Accept-Encoding", "deflate, gzip"},
 		{"Accept-Language", "en-US,en;q=0.9"},
 		{"User-Agent", "ProductName/94 CFNetwork/1335.0.3 Darwin/21.6.0"},
@@ -187,8 +188,9 @@ SekaiNetworkClient::SekaiNetworkClient(
 		{"X-Unity-Version", X_UNITY_VERSION},
 		{"X-AI", X_AI}
 	});
-}
 
+	return cli;
+}
 
 std::string SekaiNetworkClient::_GetRequestID() const
 {
@@ -416,7 +418,7 @@ string SekaiNetworkClient::_GetCookie()
 
 	LOG_DEBUG(Utils::GetLogger(), "Cookie expired, applying for a new one");
 
-	auto result = this->_cli.Post(
+	auto result = this->_GetClient().Post(
 		"/issue/api/signature", 
 		httplib::Headers{{"Accept", "*/*"}}, 
 		httplib::Params{}
@@ -446,7 +448,7 @@ string SekaiNetworkClient::_GetCookie()
 
 json SekaiNetworkClient::GetVersionInfo()
 {
-	auto result = this->_cli.Get("/production-game-api/api/system", this->_GetHeader());
+	auto result = this->_GetClient().Get("/production-game-api/api/system", this->_GetHeader());
 	this->_VerifyAndThrow(result);
 	json versions = json::from_msgpack(DecodeAES(result->body, this->_AESKey, this->_AESIV));
 
@@ -481,7 +483,7 @@ json SekaiNetworkClient::GetGameVersionInfo()
 		DataVersion = this->_DataVersion;
 	}
 
-	auto result = this->_cli.Get("/game-version/" + AppVersion + "/" + AppHash, {
+	auto result = this->_GetClient().Get("/game-version/" + AppVersion + "/" + AppHash, {
 		{"X-App-Version", AppVersion},
 		{"X-Asset-Version", AssetVersion},
 		{"X-Data-Version", DataVersion},
@@ -505,7 +507,7 @@ json SekaiNetworkClient::Login(const Account& user)
 	auto data = json::to_msgpack({
 		{"credential", user.credential}
 	});
-	auto result = this->_cli.Put(
+	auto result = this->_GetClient().Put(
 		"/production-game-api/api/user/" 
 		+ user.id.to_string() 
 		+ "/auth?refreshUpdatedResources=False", 
@@ -525,7 +527,7 @@ json SekaiNetworkClient::Register()
 		{"deviceModel", X_DEVICE_MODEL},
 		{"operatingSystem", X_OPERATING_SYSTEM}
 	});
-	auto result = this->_cli.Post(
+	auto result = this->_GetClient().Post(
 		"/production-game-api/api/user", 
 		this->_GetHeader(),
 		EncodeAES({data.begin(), data.end()}, this->_AESKey, this->_AESIV), 
@@ -543,7 +545,7 @@ json SekaiNetworkClient::GetUserProfile(UID_t UserId)
 	auto header = this->_GetHeader();
 	header.emplace("X-Session-Token", std::move(token));
 
-	auto result = this->_cli.Get("/production-game-api/api/user/" + UserId.to_string() + "/profile", std::move(header));
+	auto result = this->_GetClient().Get("/production-game-api/api/user/" + UserId.to_string() + "/profile", std::move(header));
 
 	if (result && result->has_header("X-Session-Token"))
 		this->_RefreshToken(id, result->get_header_value("X-Session-Token"));
@@ -560,7 +562,7 @@ json SekaiNetworkClient::GetUserEventRanking(UID_t UserId, uint64_t EventId)
 	auto header = this->_GetHeader();
 	header.emplace("X-Session-Token", std::move(token));
 
-	auto result = this->_cli.Get(
+	auto result = this->_GetClient().Get(
 		"/production-game-api/api/user/" + id.to_string() + 
 		"/event/" + std::to_string(EventId) + 
 		"/ranking?targetUserId=" + UserId.to_string(), 
@@ -588,7 +590,7 @@ json SekaiNetworkClient::GetEventRankingUser(uint64_t TargetRank, uint64_t Event
 	if (LowerLimit > 1)
 		url += "&lowerLimit=" + std::to_string(LowerLimit);
 
-	auto result = this->_cli.Get(url, std::move(header));
+	auto result = this->_GetClient().Get(url, std::move(header));
 	
 	if (result && result->has_header("X-Session-Token"))
 		this->_RefreshToken(id, result->get_header_value("X-Session-Token"));
@@ -714,7 +716,7 @@ json SekaiNetworkClient::GetAssetList()
 
 	AESContentReceiver receiver(this->_AESKey, this->_AESIV);
 	
-	auto result = this->_cli.Get(
+	auto result = this->_GetClient().Get(
 		"/assetbundle-info/" + AssetBundleHostHash + "/api/version/" + AssetVersion + "/os/ios?t=" + string(timestamp),
 		{
 			{"Accept", "*/*"},
@@ -737,7 +739,7 @@ string SekaiNetworkClient::GetMasterSuiteInfo()
 
 	AESContentReceiver receiver(this->_AESKey, this->_AESIV);
 
-	auto result = this->_cli.Get(
+	auto result = this->_GetClient().Get(
 		"/production-game-api/api/suite/master", std::move(header),
 		[&receiver](auto* data, auto n) { return receiver.Receiver(data, n); }
 	);

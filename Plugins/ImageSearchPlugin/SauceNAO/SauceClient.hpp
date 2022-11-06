@@ -1,13 +1,18 @@
 #ifndef _IMAGE_SEARCH_SAUCENAO_CLIENT_HPP_
 #define _IMAGE_SEARCH_SAUCENAO_CLIENT_HPP_
 
+#include <filesystem>
 #include <string>
 #include <string_view>
 
-#include <httplib.h>
-#include <nlohmann/json.hpp>
-
 #include "Models.hpp"
+
+namespace httplib
+{
+
+class Client;
+
+}
 
 namespace SauceNAO
 {
@@ -38,20 +43,18 @@ protected:
 	const std::string _APIKey;
 	const OUTPUT_TYPE _type = JSON;
 
-	const size_t _ResultNum;
-	const bool _TestMode;
-	const double _MinSimilarity;
-	const uint64_t _mask;
-	const DEDUPE_LEVEL _dedupe;
-	const HIDE_EXPLICIT _hide;
+	const SearchOptions _opts;
 
-	httplib::Client _cli;
+	const std::string _ProxyHost;
+	const int _ProxyPort;
+
+	httplib::Client _GetClient() const;
 
 public:
 	explicit SauceClient(
 		std::string APIKey,
-		const SearchOptions& opts,
-		const std::string& ProxyHost = {},
+		SearchOptions opts,
+		std::string ProxyHost = {},
 		int ProxyPort = -1
 	);
 

@@ -3,15 +3,20 @@
 
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <httplib.h>
-#include <nlohmann/json_fwd.hpp>
-
 #include "Models.hpp"
+
+namespace httplib
+{
+
+class Client;
+
+}
 
 namespace Pixiv
 {
@@ -28,10 +33,6 @@ class PixivClient
 	static constexpr auto expire_timeout = std::chrono::seconds(3600) * 0.95;
 
 protected:
-	httplib::Client _OauthCli;
-	httplib::Client _ApiCli;
-	httplib::Client _DownloadCli;
-
 	const std::string _RefreshToken;
 	const std::string _ProxyHost;
 	const int _ProxyPort;
@@ -44,72 +45,75 @@ protected:
 
 	mutable std::mutex _mtx;
 
-	void _InitClients()
-	{
-		if (!this->_ProxyHost.empty() && this->_ProxyPort > 0)
-		{
-			this->_OauthCli.set_proxy(this->_ProxyHost, this->_ProxyPort);
-			this->_ApiCli.set_proxy(this->_ProxyHost, this->_ProxyPort);
-			this->_DownloadCli.set_proxy(this->_ProxyHost, this->_ProxyPort);
-		}
+	// void _InitClients()
+	// {
+	// 	if (!this->_ProxyHost.empty() && this->_ProxyPort > 0)
+	// 	{
+	// 		this->_OauthCli.set_proxy(this->_ProxyHost, this->_ProxyPort);
+	// 		this->_ApiCli.set_proxy(this->_ProxyHost, this->_ProxyPort);
+	// 		this->_DownloadCli.set_proxy(this->_ProxyHost, this->_ProxyPort);
+	// 	}
 
-		// this->_OauthCli.set_keep_alive(true);
-		// this->_ApiCli.set_keep_alive(true);
-		// this->_DownloadCli.set_keep_alive(true);
+	// 	// this->_OauthCli.set_keep_alive(true);
+	// 	// this->_ApiCli.set_keep_alive(true);
+	// 	// this->_DownloadCli.set_keep_alive(true);
 
-		this->_OauthCli.set_connection_timeout(10); // NOLINT(*-avoid-magic-numbers)
-		this->_OauthCli.set_write_timeout(10); // NOLINT(*-avoid-magic-numbers)
-		this->_OauthCli.set_read_timeout(60); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_OauthCli.set_connection_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_OauthCli.set_write_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_OauthCli.set_read_timeout(60); // NOLINT(*-avoid-magic-numbers)
 
-		this->_ApiCli.set_connection_timeout(10); // NOLINT(*-avoid-magic-numbers)
-		this->_ApiCli.set_write_timeout(10); // NOLINT(*-avoid-magic-numbers)
-		this->_ApiCli.set_read_timeout(60); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_ApiCli.set_connection_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_ApiCli.set_write_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_ApiCli.set_read_timeout(60); // NOLINT(*-avoid-magic-numbers)
 
-		this->_DownloadCli.set_connection_timeout(10); // NOLINT(*-avoid-magic-numbers)
-		this->_DownloadCli.set_write_timeout(10); // NOLINT(*-avoid-magic-numbers)
-		this->_DownloadCli.set_read_timeout(120); // NOLINT(*-avoid-magic-numbers)
-	}
+	// 	this->_DownloadCli.set_connection_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_DownloadCli.set_write_timeout(10); // NOLINT(*-avoid-magic-numbers)
+	// 	this->_DownloadCli.set_read_timeout(120); // NOLINT(*-avoid-magic-numbers)
+	// }
+
+	httplib::Client _GetOAuthClient() const;
+	httplib::Client _GetApiClient() const;
+	httplib::Client _GetDownloadClient() const;
 
 public:
 	explicit PixivClient(std::string token, std::string ProxyHost = {}, int ProxyPort = -1) : 
-	_RefreshToken(std::move(token)), _ProxyHost(std::move(ProxyHost)), _ProxyPort(ProxyPort),
-	_OauthCli(oauth_hosts.data()), _ApiCli(api_hosts.data()), _DownloadCli(download_hosts.data())
+	_RefreshToken(std::move(token)), _ProxyHost(std::move(ProxyHost)), _ProxyPort(ProxyPort)
 	{
-		this->_InitClients();
 	}
 
 	PixivClient(const PixivClient& rhs) :
-	_RefreshToken(rhs._RefreshToken), _ProxyHost(rhs._ProxyHost), _ProxyPort(rhs._ProxyPort),
-	_OauthCli(oauth_hosts.data()), _ApiCli(api_hosts.data()), _DownloadCli(download_hosts.data())
+	_RefreshToken(rhs._RefreshToken), _ProxyHost(rhs._ProxyHost), _ProxyPort(rhs._ProxyPort)
 	{
 		{
-			std::lock_guard<std::mutex> lk(rhs._mtx);
-			this->_AccessToken = rhs._AccessToken;
-			this->_ObtainedTime = rhs._ObtainedTime;
+		
+		std::lock_guard<std::mutex> lk(rhs._mtx);
+		this->_AccessToken = rhs._AccessToken;
+		this->_ObtainedTime = rhs._ObtainedTime;
+	
 		}
-
-		this->_InitClients();
 	}
 	
 	PixivClient(PixivClient&& rhs) :
-	_RefreshToken(rhs._RefreshToken), _ProxyHost(rhs._ProxyHost), _ProxyPort(rhs._ProxyPort),
-	_OauthCli(oauth_hosts.data()), _ApiCli(api_hosts.data()), _DownloadCli(download_hosts.data())
+	_RefreshToken(rhs._RefreshToken), _ProxyHost(rhs._ProxyHost), _ProxyPort(rhs._ProxyPort)
 	{
 		{
-			std::lock_guard<std::mutex> lk(rhs._mtx);
-			this->_AccessToken = std::move(rhs._AccessToken);
-			this->_ObtainedTime = std::move(rhs._ObtainedTime);
-		}
 
-		this->_InitClients();
+		std::lock_guard<std::mutex> lk(rhs._mtx);
+		this->_AccessToken = std::move(rhs._AccessToken);
+		this->_ObtainedTime = std::move(rhs._ObtainedTime);
+		
+		}
 	}
 
-	PixivClient& operator=(const PixivClient&) = delete;
+	PixivClient& operator=(const PixivClient& rhs) = delete;
 	PixivClient& operator=(PixivClient&&) = delete;
 	~PixivClient() = default;
 
+	// 下载图片
 	std::string DownloadIllust(const std::string& url);
-	void DownloadIllust(const std::string& url, httplib::ContentReceiver receiver);
+	void DownloadIllust(const std::string& url, std::function<bool(const char*, size_t)> receiver);
+	std::vector<std::string> BatchDownloadIllust(const std::vector<std::string>& urls);
+	void BatchDownloadIllust(const std::vector<std::string>& urls, std::function<bool(std::string, size_t)> receiver);
 
 	using json = nlohmann::json;
 
