@@ -1,3 +1,9 @@
-[submodule "Client/cpp-mirai-client"]
-	path = Client/cpp-mirai-client
-	url = git@github.com:numendacil/cpp-mirai-client
+[submodule "ElanorCore/Core/Client/--recursive"]
+	path = ElanorCore/Core/Client/--recursive
+	url = git@github.com:Numendacil/cpp-mirai-client
+[submodule "ElanorCore/Core/Client/cpp-mirai-client"]
+	path = ElanorCore/Core/Client/cpp-mirai-client
+	url = git@github.com:Numendacil/cpp-mirai-client
+[submodule "googletest"]
+	path = googletest
+	url = git@github.com:google/googletest.git

@@ -2,27 +2,32 @@ cmake_minimum_required (VERSION 3.20)
 
 project(ElanorBot LANGUAGES CXX VERSION 1.0.0)
 
-set(ELANORBOT_TARGET_NAME ElanorBot)
 
-find_package(ZLIB REQUIRED)
-find_package(OpenSSL REQUIRED)
 
-add_executable(${ELANORBOT_TARGET_NAME})
+# Options
+option(ELANOR_BUILD_UNIT_TESTS "Build UnitTests" ON)
+option(ELANOR_INSTALL "Install library" OFF)
 
-target_include_directories(${ELANORBOT_TARGET_NAME} PRIVATE .)
-target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE Client)
-target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE ZLIB::ZLIB)
-target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE OpenSSL::SSL)
-target_link_libraries(${ELANORBOT_TARGET_NAME} PRIVATE OpenSSL::Crypto)
-target_compile_features(${ELANORBOT_TARGET_NAME} PRIVATE cxx_std_20)
-set_property(TARGET ${ELANORBOT_TARGET_NAME} PROPERTY CXX_STANDARD 17)
-set_property(TARGET ${ELANORBOT_TARGET_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(App)
-add_subdirectory(Client)
-add_subdirectory(Group)
-add_subdirectory(Command)
-add_subdirectory(State)
-add_subdirectory(Trigger)
-add_subdirectory(ThirdParty)
-add_subdirectory(Utils)
+
+if(ELANOR_BUILD_UNIT_TESTS)
+	message("UnitTest enabled for ElanorBot")
+	find_package(GTest QUIET)
+	if (NOT GTest_FOUND)
+		message("GooogleTest not found, building from subdirectory")
+		add_subdirectory(googletest)
+	endif()
+endif(ELANOR_BUILD_UNIT_TESTS)
+
+if(ELANOR_INSTALL)
+	set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install library in the current directory" FORCE)
+endif(ELANOR_INSTALL)
+
+
+
+# Set logging level to DEBUG
+add_compile_definitions(MIRAI_LOGGING_LEVEL=1)
+
+# add_subdirectory(ElanorApp)
+add_subdirectory(ElanorCore)
+# add_subdirectory(Plugins)
